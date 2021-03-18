@@ -1,0 +1,10 @@
+dist
+coverage
+node_modules
+npm-debug.log
+.DS_Store
+src/.DS_Store
+.vscode
+config.env
+jest-report
+package-lock.json

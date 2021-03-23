@@ -1,3 +1,10 @@
+/*
+ * Copyright (c) 2021, salesforce.com, inc.
+ * All rights reserved.
+ * SPDX-License-Identifier: BSD-3-Clause
+ * For full license text, see the LICENSE file in the repo root or https://opensource.org/licenses/BSD-3-Clause
+ */
+
 /* eslint-disable no-unused-vars */
 /* eslint-disable no-console */
 
@@ -28,14 +35,17 @@ class Call extends PhoneCall {
         callAttributes.state = state;
         callAttributes.isOnHold = callInfo.isOnHold;
         callId = callId || Math.random().toString(36).substring(7);
+        if (callAttributes.participantType === Constants.PARTICIPANT_TYPE.INITIAL_CALLER) {
+            callInfo.parentCallId = callId;
+        }
         super({ callId, callType, contact, state, callAttributes, phoneNumber: contact.phoneNumber, callInfo }); 
     }
 
     /**
      * set callId of parent call
      */
-    set parentId(parentId) {
-        this.callAttributes.parentId = parentId;
+    set parentCallId(parentCallId) {
+        this.callInfo.parentCallId = parentCallId;
     }
 }
 
@@ -618,7 +628,7 @@ export class Sdk {
         parentCall.callInfo.isOnHold = true;
         const parentVoiceCallId = parentCall.callAttributes.voiceCallId;
         const newCall = new Call(Constants.CALL_TYPE.ADD_PARTICIPANT, contact, { participantType: Constants.PARTICIPANT_TYPE.THIRD_PARTY, voiceCallId: parentVoiceCallId }, new CallInfo({ isOnHold : false }));
-        newCall.parentId = parentCall.callId;
+        newCall.parentCallId = parentCall.callId;
         newCall.callAttributes.isOnHold = false; // same FIXME
         newCall.state = Constants.CALL_STATE.TRANSFERRING;
         this.log("addParticipant to parent voiceCall " + parentVoiceCallId, newCall);

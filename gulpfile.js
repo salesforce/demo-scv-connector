@@ -1,3 +1,10 @@
+/*
+ * Copyright (c) 2021, salesforce.com, inc.
+ * All rights reserved.
+ * SPDX-License-Identifier: BSD-3-Clause
+ * For full license text, see the LICENSE file in the repo root or https://opensource.org/licenses/BSD-3-Clause
+ */
+
 require("@babel/register")({
   ignore: [/node_modules/]
 });
@@ -8,12 +15,9 @@ const jest = require('gulp-jest').default;
 const eslint = require('gulp-eslint');
 const webpackStream = require('webpack-stream');
 const shell = require('gulp-shell');
-const os = require('os');
 const argv = require('yargs').argv;
 const replace = require('gulp-replace');
 const replaceName = require('gulp-replace-name');
-
-const p4WorkspaceName = process.env.DEFAULT_P4_BRANCH ? process.env.DEFAULT_P4_BRANCH : os.hostname().split('.')[0] + '-blt';
 
 const source = ['src/main/index.js'];
 

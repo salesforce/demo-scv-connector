@@ -1,5 +1,8 @@
-# demo-connector
-Demo Salesforce Service Cloud Voice Connector. It will mock an incoming voice call after omni login, and let you also demo outbound calling and transfers.
+# Service Cloud Voice demo connector
+The demo connector is a sample application for partner telephony systems that integrate with Salesforce Service Cloud Voice. It demonstrates an optimal Voice implementation based on a group of telephony API mocks. It also includes a voice call simulation tool that you can use to test call actions such as making and answering calls and using phone controls.
+
+## Document
+We’ve provided documentation in the `/docs/` folder.
 
 ## Installation
 
@@ -8,13 +11,7 @@ The developer environment requires [Node](https://nodejs.org/en/download/), [NPM
 
 
 ### Installation
-#### Clone the repo
-
-```
-$ cd /directory/to/house/the/repo
-$ git clone git@github.com:salesforce/demo-scv-connector.git
-```
-
+#### Clone this repo
 #### Install npm dependencies
 
 ```
@@ -51,3 +48,6 @@ To bundle the source code in the src/ folder into one minified connector_min.js 
 ```
 $ gulp bundle --mode prod
 ```
+
+## Contributing and Developing Locally
+We welcome contributors into our repo. Please read the [contributing guidelines](https://github.com/salesforce/demo-scv-connector/blob/master/CONTRIBUTING.md) for more information.

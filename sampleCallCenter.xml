@@ -2,7 +2,7 @@
    <section sortOrder="0" name="reqGeneralInfo" label="General Information">
     <item sortOrder="0" name="reqInternalName" label="InternalName">BYOT</item>
     <item sortOrder="1" name="reqDisplayName" label="Display Name">BYOT</item>
-    <item sortOrder="2" name="reqAdapterUrl" label="Adapter URL">https://dlouvton-ltm.internal.salesforce.com:8080</item>
+    <item sortOrder="2" name="reqAdapterUrl" label="Adapter URL">https://localhost:8080</item>
     <item sortOrder="3" name="reqUseApi" label="Use CTI API">true</item>
     <item sortOrder="4" name="reqSoftphoneHeight" label="Softphone Height">1</item>
     <item sortOrder="5" name="reqSoftphoneWidth" label="Softphone Width">1</item>

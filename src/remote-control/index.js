@@ -51,8 +51,15 @@ export function initializeRemoteController(connector) {
                     }
                     break;
                     case Constants.SET_AGENT_CONFIG: {
-                        connector.sdk.updateAgentConfig({ hasMute: event.data.value.hasMute, hasRecord: event.data.value.hasRecord,
-                            hasSwap: event.data.value.hasSwap, hasMerge: event.data.value.hasMerge, selectedPhone: event.data.value.selectedPhone
+                        connector.sdk.updateAgentConfig({
+                            hasMute: event.data.value.hasMute,
+                            hasRecord: event.data.value.hasRecord,
+                            hasSwap: event.data.value.hasSwap,
+                            hasMerge: event.data.value.hasMerge,
+                            hasSignedRecordingUrl: event.data.value.hasSignedRecordingUrl,
+                            signedRecordingUrl: event.data.value.signedRecordingUrl,
+                            signedRecordingDuration: event.data.value.signedRecordingDuration,
+                            selectedPhone: event.data.value.selectedPhone
                          });
                     }
                     break;
@@ -82,7 +89,7 @@ export function initializeRemoteController(connector) {
                     }
                     break;
                     case Constants.SOFTPHONE_LOGOUT: {
-                        await connector.sdk.subsystemLogout();
+                        connector.sdk.subsystemLogout();
                     }
                     break;
                     case Constants.CREATE_TRANSCRIPTION: {

@@ -12,7 +12,7 @@ jest.mock('scv-connector-base', () => ({
 
 import constants from './testConstants';
 import { publishEvent, GenericResult, PhoneCall, Contact, ParticipantResult, CallInfo, CallResult,
-    Constants, Phone, AgentStatusInfo, HangupResult } from 'scv-connector-base';
+    LogoutResult, Constants, Phone, AgentStatusInfo, HangupResult } from 'scv-connector-base';
 import { Connector } from '../main/connector';
 
 global.console.log = jest.fn(); //do not print console.log 
@@ -428,6 +428,27 @@ describe('Vendor Sdk tests', () => {
         });
     });
 
+    describe('getSignedRecordingUrl', () => {
+        it('Should return a SignedRecordingUrlResult on getSignedRecordingUrl', async () => {
+            vendorSdk.state.agentConfig.hasSignedRecordingUrl = false;
+            expect(connector.getSignedRecordingUrl('recordingUrl')).rejects.toThrow();
+        });
+
+        it('Should return a SignedRecordingUrlResult on getSignedRecordingUrl', async () => {
+            const url = 'url';
+            const duration = '10';
+            const callId = 'callId';
+            vendorSdk.state.agentConfig.signedRecordingUrl = url;
+            vendorSdk.state.agentConfig.signedRecordingDuration = duration;
+            vendorSdk.state.agentConfig.hasSignedRecordingUrl = true;
+            const signedRecordingUrlResult = await connector.getSignedRecordingUrl('recordingUrl', url, callId);
+            expect(signedRecordingUrlResult.success).toBeTruthy();
+            expect(signedRecordingUrlResult.callId).toEqual(callId);
+            expect(signedRecordingUrlResult.url).toEqual(url);
+            expect(signedRecordingUrlResult.duration).toEqual(10);
+        });
+    });
+
     describe('connectParticipant', () => {
         it('Should publish a participant result on connectParticipant', async () => {
             const startCallResult = await vendorSdk.startInboundCall(dummyPhoneNumber, dummyCallAttributes);
@@ -648,7 +669,10 @@ describe('Vendor Sdk tests', () => {
     describe('subsystemLogout', () => {
         it('Should publish a logout result on subsystemLogout', async () => {
             vendorSdk.subsystemLogout();
-            expect(publishEvent).toBeCalledWith({ eventType: Constants.EVENT_TYPE.LOGOUT_RESULT, payload: new GenericResult({ success: true })});
+            expect(publishEvent).toBeCalledWith({ eventType: Constants.EVENT_TYPE.LOGOUT_RESULT, payload: new LogoutResult({
+                success: true,
+                loginFrameHeight: 350
+            })});
         });
     });
 

@@ -15,8 +15,8 @@
 
  /** @module vendor-sdk **/
  import { publishEvent, ActiveCallsResult, AgentConfigResult, RecordingToggleResult, ParticipantResult, MuteToggleResult,
-    PhoneContactsResult, CallResult, HangupResult, HoldToggleResult, InitResult, GenericResult,
-    CallInfo, PhoneCall, PhoneCallAttributes, Contact, Constants, Phone } from 'scv-connector-base';
+    PhoneContactsResult, CallResult, HangupResult, HoldToggleResult, InitResult, GenericResult, SignedRecordingUrlResult,
+    LogoutResult, CallInfo, PhoneCall, PhoneCallAttributes, Contact, Constants, Phone } from 'scv-connector-base';
 
 /** 
  * Class representing a Phone Call
@@ -64,6 +64,9 @@ export class Sdk {
             hasMute: true,
             hasRecord: true,
             hasSwap: true,
+            hasSignedRecordingUrl: false,
+            signedRecordingUrl: '',
+            signedRecordingDuration: null,
             phones : [ "SOFT_PHONE", "DESK_PHONE"],
             selectedPhone : {type:"SOFT_PHONE"}
         },
@@ -174,6 +177,9 @@ export class Sdk {
        this.state.agentConfig.hasRecord = agentConfig.hasRecord;
        this.state.agentConfig.hasSwap = agentConfig.hasSwap;
        this.state.agentConfig.hasMerge = agentConfig.hasMerge;
+       this.state.agentConfig.hasSignedRecordingUrl = agentConfig.hasSignedRecordingUrl;
+       this.state.agentConfig.signedRecordingUrl = agentConfig.signedRecordingUrl;
+       this.state.agentConfig.signedRecordingDuration = agentConfig.signedRecordingDuration;
        localStorage.setItem('agentConfig', JSON.stringify(this.state.agentConfig));
     }
 
@@ -291,14 +297,20 @@ export class Sdk {
      * simulate logout from the telephony sub system
      */
     subsystemLogout() {
-        publishEvent({ eventType: Constants.EVENT_TYPE.LOGOUT_RESULT, payload: new GenericResult({ success: !this.state.throwError }) });
+        publishEvent({ eventType: Constants.EVENT_TYPE.LOGOUT_RESULT, payload: new LogoutResult({
+            success: !this.state.throwError,
+            loginFrameHeight: 350
+        })});
     }
 
     /**
      * perform logout from Omni
      */
     omniLogout() {
-        return this.executeAsync("SubsystemLogout", new GenericResult({ success: true }));
+        return this.executeAsync("SubsystemLogout", new LogoutResult({
+            success: true,
+            loginFrameHeight: 350
+        }));
     }
     /**
      * execute an async action and return a promise
@@ -332,6 +344,11 @@ export class Sdk {
             case "resumeRecording":
                 if (!this.state.agentConfig.hasRecord) {
                     return Promise.reject(new Error('Recording is not supported'));
+                }
+            break;
+            case "getSignedRecordingUrl":
+                if (!this.state.agentConfig.hasSignedRecordingUrl || !this.state.agentConfig.signedRecordingUrl) {
+                    return Promise.reject(new Error('Signed recording url is not supported'));
                 }
             break;
         }
@@ -384,7 +401,11 @@ export class Sdk {
             publishEvent({ eventType: Constants.EVENT_TYPE.CALL_STARTED, payload: callResult })
             return this.executeAsync('startInboundCall', callResult);
         };
-        return fetch('/api/createVoiceCall?caller=' + phoneNumber + '&type=' + Constants.CALL_TYPE.INBOUND)
+        return fetch('/api/createVoiceCall?caller=' + phoneNumber + '&type=' + Constants.CALL_TYPE.INBOUND, {
+                headers: {
+                    '"Strict-Transport-Security': 'max-age=31536000'
+                }
+            })
             .then(response => response.json())
             .then((data) => {
                 if (!data.voiceCallId){
@@ -421,6 +442,9 @@ export class Sdk {
             hasMerge: this.state.agentConfig.hasMerge,
             hasRecord: this.state.agentConfig.hasRecord,
             hasSwap:  this.state.agentConfig.hasSwap,
+            hasSignedRecordingUrl: this.state.agentConfig.hasSignedRecordingUrl,
+            signedRecordingUrl: this.state.agentConfig.signedRecordingUrl,
+            signedRecordingDuration: this.state.agentConfig.signedRecordingDuration,
             phones: this.state.agentConfig.phones,
             selectedPhone: new Phone (this.state.agentConfig.selectedPhone)
         }));
@@ -736,6 +760,16 @@ export class Sdk {
     handleMessage(message) {
         this.log("handleMessage", message);
     }
+
+    getSignedRecordingUrl(recordingUrl, vendorCallKey, callId) {
+        return this.executeAsync("getSignedRecordingUrl", new SignedRecordingUrlResult({
+            success: this.state.agentConfig.hasSignedRecordingUrl,
+            url: this.state.agentConfig.signedRecordingUrl,
+            duration: parseInt(this.state.agentConfig.signedRecordingDuration),
+            callId
+        }));
+    }
+
     /**
      * Simulate callback
      */

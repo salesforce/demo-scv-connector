@@ -13,6 +13,10 @@ const throwErrorCheckbox = document.getElementById('throwErrorCheckbox');
 const hasMuteCheckbox = document.getElementById('hasMuteCheckbox');
 const hasRecordCheckbox = document.getElementById('hasRecordCheckbox');
 const hasSwapCheckbox = document.getElementById('hasSwapCheckbox');
+const hasSignedRecordingUrlCheckbox = document.getElementById('hasSignedRecordingUrlCheckbox');
+const signedRecordingUrl = document.getElementById('signed-recording-url');
+const signedRecordingDuration = document.getElementById('signed-recording-duration');
+const signedRecordingDetails = document.getElementById('signed-recording-url-details');
 const hasMergeCheckbox = document.getElementById('hasMergeCheckbox');
 const callIsRecordingPaused = document.getElementById('callIsRecordingPaused');
 const callIsOnHold = document.getElementById('callIsOnHold');
@@ -84,6 +88,7 @@ const softphoneRadio = document.getElementById('softphone');
 
 const call = { callAttributes: { participantType: Constants.PARTICIPANT_TYPE.INITIAL_CALLER }};
 const thirdPartyCall = { callAttributes: { participantType: Constants.PARTICIPANT_TYPE.THIRD_PARTY }};
+signedRecordingDetails.style.display = "none";
 
 function getCallInfo() {
     return {
@@ -110,6 +115,10 @@ function toggleHardphoneElements() {
     })
 }
 
+function toggleSignedRecordingUrlElements() {
+    signedRecordingDetails.style.display = hasSignedRecordingUrlCheckbox.checked ? 'block' : 'none';
+}
+
 function updateActiveCalls() {
     requestBroadcastChannel.postMessage({
         type: Constants.GET_ACTIVE_CALLS
@@ -132,6 +141,9 @@ requestBroadcastChannel.addEventListener('message', (event) => {
                 hasRecordCheckbox.checked = event.data.value.hasRecord;
                 hasSwapCheckbox.checked = event.data.value.hasSwap;
                 hasMergeCheckbox.checked = event.data.value.hasMerge;
+                hasSignedRecordingUrlCheckbox.checked = event.data.value.hasSignedRecordingUrl;
+                signedRecordingUrl.value = event.data.value.signedRecordingUrl ? event.data.value.signedRecordingUrl : '';
+                signedRecordingDuration.value = event.data.value.signedRecordingDuration ? event.data.value.signedRecordingDuration : '';
                 if(event.data.value.selectedPhone.type  === 'DESK_PHONE') {
                     hardphoneRadio.checked = true;
                     softphoneRadio.checked = false;
@@ -140,6 +152,7 @@ requestBroadcastChannel.addEventListener('message', (event) => {
                     hardphoneRadio.checked = false;
                 }
                 toggleHardphoneElements();
+                toggleSignedRecordingUrlElements();
             }
             break;
             case Constants.MESSAGE: {
@@ -207,6 +220,9 @@ hasMuteCheckbox.addEventListener('change', setAgentConfig);
 hasRecordCheckbox.addEventListener('change', setAgentConfig);
 hasMergeCheckbox.addEventListener('change', setAgentConfig);
 hasSwapCheckbox.addEventListener('change', setAgentConfig);
+hasSignedRecordingUrlCheckbox.addEventListener('change', setAgentConfig);
+signedRecordingUrl.addEventListener('change', setAgentConfig);
+signedRecordingDuration.addEventListener('change', setAgentConfig);
 hardphoneRadio.addEventListener('change', setAgentConfig);
 softphoneRadio.addEventListener('change', setAgentConfig);
 startOutboundCallButton.addEventListener('click', startOutboundCall);
@@ -260,11 +276,19 @@ function throwErrorChanged() {
 
 function setAgentConfig() {
     toggleHardphoneElements();
+    toggleSignedRecordingUrlElements();
     startOutboundCallButton.disabled = !hardphoneRadio.checked;
     requestBroadcastChannel.postMessage({
         type: Constants.SET_AGENT_CONFIG,
-        value: { hasMute: hasMuteCheckbox.checked, hasRecord: hasRecordCheckbox.checked,
-                 hasSwap: hasSwapCheckbox.checked, hasMerge: hasMergeCheckbox.checked, selectedPhone: hardphoneRadio.checked? {type: "DESK_PHONE", number:"101 101 10001"}: {type: "SOFT_PHONE"}}
+        value: {
+            hasMute: hasMuteCheckbox.checked,
+            hasRecord: hasRecordCheckbox.checked,
+            hasSwap: hasSwapCheckbox.checked,
+            hasMerge: hasMergeCheckbox.checked,
+            hasSignedRecordingUrl: hasSignedRecordingUrlCheckbox.checked,
+            signedRecordingUrl: signedRecordingUrl.value,
+            signedRecordingDuration: signedRecordingDuration.value,
+            selectedPhone: hardphoneRadio.checked? {type: "DESK_PHONE", number:"101 101 10001"}: {type: "SOFT_PHONE"}}
     });
 }
 
@@ -333,7 +357,6 @@ function callError() {
         type: Constants.AGENT_HANGUP, 
         reason: Constants.HANGUP_REASON.PHONE_CALL_ERROR,
         agentErrorStatus: "AnyVendorError"
-
     });
 }
 

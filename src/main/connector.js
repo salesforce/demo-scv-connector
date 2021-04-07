@@ -202,4 +202,15 @@ export class Connector {
         // dispatchEventToRemote is only for demo purposes
         this.dispatchEventToRemote(Constants.EVENT_TYPE.MESSAGE, message);
     }
+
+    /**
+     * Get the signed recording url
+     * @param {String} recordingUrl
+     * @param {String} vendorCallKey
+     * @param {String} callId
+     * @returns {Promise<SignedRecordingUrlResult>} 
+     */
+    getSignedRecordingUrl(recordingUrl, vendorCallKey, callId) {
+        return this.sdk.getSignedRecordingUrl(recordingUrl, vendorCallKey, callId);
+    }
 }

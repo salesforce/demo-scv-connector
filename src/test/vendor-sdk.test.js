@@ -5,14 +5,14 @@
  * For full license text, see the LICENSE file in the repo root or https://opensource.org/licenses/BSD-3-Clause
  */
 
-jest.mock('scv-connector-base', () => ({
-    ...(jest.requireActual('scv-connector-base')),
+jest.mock('@salesforce/scv-connector-base', () => ({
+    ...(jest.requireActual('@salesforce/scv-connector-base')),
     publishEvent: jest.fn()
 }));
 
 import constants from './testConstants';
 import { publishEvent, GenericResult, PhoneCall, Contact, ParticipantResult, CallInfo, CallResult,
-    LogoutResult, Constants, Phone, AgentStatusInfo, HangupResult } from 'scv-connector-base';
+    LogoutResult, Constants, Phone, AgentStatusInfo, HangupResult } from '@salesforce/scv-connector-base';
 import { Connector } from '../main/connector';
 
 global.console.log = jest.fn(); //do not print console.log 

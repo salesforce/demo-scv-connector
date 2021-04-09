@@ -37,10 +37,7 @@ gulp.task('test', function() {
                 "**/main/vendor-sdk*"
             ],
             "collectCoverage": true,
-            "clearMocks": true,
-            "transformIgnorePatterns": [
-                "/node_modules/(?!scv-connector-base).+\\.js$"
-           ]
+            "clearMocks": true
         }));
 });
 

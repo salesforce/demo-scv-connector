@@ -11,7 +11,7 @@
  */
 
 /** @module connector **/
-import { Constants } from 'scv-connector-base';
+import { Constants } from '@salesforce/scv-connector-base';
 import { Sdk } from './vendor-sdk';
 /** 
  * Class representing a Service Cloud Voice Demo Connector

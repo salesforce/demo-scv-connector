@@ -403,7 +403,7 @@ export class Sdk {
         };
         return fetch('/api/createVoiceCall?caller=' + phoneNumber + '&type=' + Constants.CALL_TYPE.INBOUND, {
                 headers: {
-                    '"Strict-Transport-Security': 'max-age=31536000'
+                    'Strict-Transport-Security': 'max-age=31536000'
                 }
             })
             .then(response => response.json())

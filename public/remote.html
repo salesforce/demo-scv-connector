@@ -78,6 +78,36 @@
                             </div>
                         </div>
                         <div class="slds-form-element">
+                            <div class="slds-form-element__control">
+                                <div class="slds-checkbox">
+                                    <input type="checkbox" name="options" id="hasSignedRecordingUrlCheckbox" />
+                                    <label class="slds-checkbox__label" for="hasSignedRecordingUrlCheckbox">
+                                        <span class="slds-checkbox_faux"></span>
+                                        <span class="slds-form-element__label">User supports signed recording URL</span>
+                                    </label>
+                                </div>
+                                <div id="signed-recording-url-details">
+                                    <div class="slds-grid">
+                                        <div class="slds-col slds-size_2-of-3">
+                                            <label class="slds-form-element__label" for="voice-id">
+                                                Signed Recording URL
+                                            </label>
+                                            <div class="slds-form-element__control">
+                                                <input type="text" id="signed-recording-url" placeholder="" maxlength="1000" required="" class="slds-input" />
+                                            </div>
+                                        </div>
+                                        <div class="slds-col slds-size_1-of-3">
+                                            <label class="slds-form-element__label" for="interaction-duration">
+                                                Recording Duration (Seconds)
+                                            </label>
+                                            <div class="slds-form-element__control">
+                                                <input type="number" id="signed-recording-duration" placeholder="" required="" class="slds-input" />
+                                            </div>
+                                        </div>
+                                    </div>
+                            </div>
+                        </div>
+                        <div class="slds-form-element">
                             <div id="agentPhones" class="slds-form-element__control slds-grid slds-container--small  slds-m-top_medium">
                                 <span class="slds-radio">
                                     <input type="radio" id="softphone" value="softphone" name="default" checked="" />

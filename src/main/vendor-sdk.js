@@ -139,7 +139,6 @@ export class Sdk {
      * Add a call to the active calls (persisted on localStorage)
      */
     addCall(call) {
-        call.callInfo.callStateTimestamp = new Date();
         this.state.activeCalls[call.callId] = call;
         localStorage.setItem('activeCalls', JSON.stringify(this.state.activeCalls));
     }
@@ -366,6 +365,7 @@ export class Sdk {
             return Promise.reject(new Error(message));
         }
         callInfo = callInfo || { isOnHold: false };
+        callInfo.callStateTimestamp = new Date();
         const callAttributes = { participantType: Constants.PARTICIPANT_TYPE.INITIAL_CALLER };
         const call = new Call(Constants.CALL_TYPE.OUTBOUND, contact, callAttributes, new CallInfo(callInfo));
         this.addCall(call);
@@ -385,6 +385,7 @@ export class Sdk {
      */
     startInboundCall(phoneNumber, callInfo) {
         callInfo = callInfo || { isOnHold: false };
+        callInfo.callStateTimestamp = new Date();
         if (!this.state.agentAvailable) {
             const message = `Agent is not available for a inbound call from phoneNumber - ${phoneNumber}`;
             this.log(message);
@@ -651,7 +652,7 @@ export class Sdk {
         parentCall.callAttributes.isOnHold = true; //FIXME: remove callAttributes.isOnHold in core, we don't need isOnHold in two places
         parentCall.callInfo.isOnHold = true;
         const parentVoiceCallId = parentCall.callAttributes.voiceCallId;
-        const newCall = new Call(Constants.CALL_TYPE.ADD_PARTICIPANT, contact, { participantType: Constants.PARTICIPANT_TYPE.THIRD_PARTY, voiceCallId: parentVoiceCallId }, new CallInfo({ isOnHold : false }));
+        const newCall = new Call(Constants.CALL_TYPE.ADD_PARTICIPANT, contact, { participantType: Constants.PARTICIPANT_TYPE.THIRD_PARTY, voiceCallId: parentVoiceCallId }, new CallInfo({ isOnHold : false, callStateTimestamp: new Date() }));
         newCall.parentCallId = parentCall.callId;
         newCall.callAttributes.isOnHold = false; // same FIXME
         newCall.state = Constants.CALL_STATE.TRANSFERRING;

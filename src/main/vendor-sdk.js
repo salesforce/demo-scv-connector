@@ -217,7 +217,7 @@ export class Sdk {
         }
         let result = contacts;
         if (filter.contains) {
-            result = result.filter(obj => Object.keys(obj).some(key => obj[key].includes(filter.contains)));
+            result = result.filter(obj => Object.keys(obj).some(key => obj[key] && obj[key].includes(filter.contains)));
         }
         if (filter.type) {
             result = result.filter(obj => Object.keys(obj).some(key => key === "type" && obj[key] === filter.type));

@@ -6,7 +6,7 @@
   "scripts": {
     "test": "gulp lint && gulp test",
     "build": "webpack --mode production",
-    "client": "webpack-dev-server --https --cert ca/cert.pem --key ca/cert.key",
+    "client": "webpack-dev-server --https",
     "server": "nodemon --experimental-modules ./src/server/server.mjs",
     "start": "concurrently \"npm run client\" \"npm run server\"",
     "lint": "gulp lint",
@@ -48,6 +48,7 @@
   },
   "dependencies": {
     "@babel/runtime": "^7.11.2",
+    "@salesforce/scv-connector-base": "file:../scv-connector-base",
     "axios": "^0.21.1",
     "custom-env": "^2.0.1",
     "express": "^4.17.1",

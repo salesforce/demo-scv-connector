@@ -6,7 +6,7 @@
  */
 
 import Constants from '../common/constants'
-import { Contact, publishEvent, publishError } from '@salesforce/scv-connector-base';
+import { Contact, publishEvent, publishError } from 'scv-connector-base';
 
 export function initializeRemoteController(connector) {
     const requestBroadcastChannel = new BroadcastChannel('rc-request');
@@ -56,10 +56,12 @@ export function initializeRemoteController(connector) {
                             hasRecord: event.data.value.hasRecord,
                             hasSwap: event.data.value.hasSwap,
                             hasMerge: event.data.value.hasMerge,
+                            hasContactSearch: event.data.value.hasContactSearch,
                             hasSignedRecordingUrl: event.data.value.hasSignedRecordingUrl,
                             signedRecordingUrl: event.data.value.signedRecordingUrl,
                             signedRecordingDuration: event.data.value.signedRecordingDuration,
-                            selectedPhone: event.data.value.selectedPhone
+                            selectedPhone: event.data.value.selectedPhone,
+                            supportsMos: event.data.value.supportsMos
                          });
                     }
                     break;
@@ -126,6 +128,10 @@ export function initializeRemoteController(connector) {
                     break;
                     case Constants.REQUEST_CALLBACK: {
                         connector.sdk.requestCallback(event.data.payload);
+                    }
+                    break;
+                    case Constants.SEND_AUDIO_STATS: {
+                        await connector.sdk.updateAudioStats(event.data.audioStats);
                     }
                     break;
                     case Constants.HARDPHONE_EVENT: {

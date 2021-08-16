@@ -1,12 +1,12 @@
 {
-  "name": "demo-connector",
-  "version": "1.0.0",
-  "description": "demo-connector",
+  "name": "scv-demo-connector",
+  "version": "1.0.1",
+  "description": "Service Cloud Voice Demo Connector",
   "private": false,
   "scripts": {
     "test": "gulp lint && gulp test",
     "build": "webpack --mode production",
-    "client": "webpack-dev-server --https",
+    "client": "webpack-dev-server --https --cert ca/cert.pem --key ca/cert.key",
     "server": "nodemon --experimental-modules ./src/server/server.mjs",
     "start": "concurrently \"npm run client\" \"npm run server\"",
     "lint": "gulp lint",
@@ -48,12 +48,12 @@
   },
   "dependencies": {
     "@babel/runtime": "^7.11.2",
-    "@salesforce/scv-connector-base": "^3.1.51",
     "axios": "^0.21.1",
     "custom-env": "^2.0.1",
     "express": "^4.17.1",
     "jsonwebtoken": "^8.5.1",
-    "nodemon": "^2.0.4"
+    "nodemon": "^2.0.4",
+    "scv-connector-base": "3.1.77"
   },
   "jest": {
     "coverageThreshold": {

@@ -43,17 +43,12 @@ gulp.task('test', function() {
 
 gulp.task('bundle', gulp.series('lint', 'test', function() {
 
-    var webpackConfig = {
-        output: require('./webpack.config').output,
-        module: require('./webpack.config').module
-    };
+    var webpackConfig =  require('./webpack.config');
 
     var mode = argv.mode;
     if (mode === 'prod') {
         webpackConfig.mode = 'production';
-        webpackConfig.output.filename = 'main.bundle_min.js';
     } else {
-        webpackConfig.mode = 'development';
         webpackConfig.devtool = false;
     }
 

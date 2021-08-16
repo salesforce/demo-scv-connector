@@ -16,7 +16,7 @@
  /** @module vendor-sdk **/
  import { publishEvent, ActiveCallsResult, AgentConfigResult, RecordingToggleResult, ParticipantResult, MuteToggleResult,
     PhoneContactsResult, CallResult, HangupResult, HoldToggleResult, InitResult, GenericResult, SignedRecordingUrlResult,
-    LogoutResult, CallInfo, PhoneCall, PhoneCallAttributes, Contact, Constants, Phone } from '@salesforce/scv-connector-base';
+    LogoutResult, CallInfo, PhoneCall, PhoneCallAttributes, Contact, Constants, Phone, StatsInfo, AudioStats, AudioStatsGroup } from 'scv-connector-base';
 
 /** 
  * Class representing a Phone Call
@@ -67,45 +67,17 @@ export class Sdk {
             hasSignedRecordingUrl: false,
             signedRecordingUrl: '',
             signedRecordingDuration: null,
+            hasContactSearch: true,
             phones : [ "SOFT_PHONE", "DESK_PHONE"],
-            selectedPhone : {type:"SOFT_PHONE"}
+            selectedPhone : {type:"SOFT_PHONE"},
+            supportsMos : true
         },
         activeCalls: this.getActiveCallsObj(),
         destroyedCalls: [],
         agentStatus: "Available",
         publishHardphoneErrors: true,
         agentAvailable: false,
-        phoneContacts: [
-            new Contact({
-                id: 'id1',
-                phoneNumber: "555-555-4441",
-                type: Constants.CONTACT_TYPE.PHONENUMBER,
-                name: "AgentU"
-            }),
-            new Contact({
-                id: 'id2',
-                type: Constants.CONTACT_TYPE.PHONEBOOK,
-                phoneNumber: "555-555-4442",
-                name: "AgentV"
-            }),
-            new Contact({
-                id: 'id3',
-                type: Constants.CONTACT_TYPE.PHONENUMBER,
-                name: "AgentW",
-                phoneNumber: "555-555-4443"
-            }),
-            new Contact({
-                id: 'id4',
-                type: Constants.CONTACT_TYPE.PHONENUMBER,
-                name: "AgentX",
-                phoneNumber: "555-555-4444"
-            }),
-            new Contact({
-                id: 'id5',
-                type: Constants.CONTACT_TYPE.PHONEBOOK,
-                name: "AgentY",
-                phoneNumber: "555-555-4445"
-            })]
+        phoneContacts: this.getAllPhoneContacts(50)
     }){
         this.state = {...state, 
             showLoginPage: !!JSON.parse(localStorage.getItem('showLoginPage')),
@@ -179,6 +151,8 @@ export class Sdk {
        this.state.agentConfig.hasSignedRecordingUrl = agentConfig.hasSignedRecordingUrl;
        this.state.agentConfig.signedRecordingUrl = agentConfig.signedRecordingUrl;
        this.state.agentConfig.signedRecordingDuration = agentConfig.signedRecordingDuration;
+       this.state.agentConfig.hasContactSearch = agentConfig.hasContactSearch;
+       this.state.agentConfig.supportsMos = agentConfig.supportsMos;
        localStorage.setItem('agentConfig', JSON.stringify(this.state.agentConfig));
     }
 
@@ -209,7 +183,7 @@ export class Sdk {
     }
 
     /** 
-        filter contacts
+        filter contacts - simulating backend search
     */
     filterContacts(contacts, filter) {
         if (!filter) {
@@ -217,12 +191,14 @@ export class Sdk {
         }
         let result = contacts;
         if (filter.contains) {
-            result = result.filter(obj => Object.keys(obj).some(key => obj[key] && obj[key].includes(filter.contains)));
+            result = result.filter(obj => Object.keys(obj).some(key => obj[key] && obj[key].toLowerCase().includes(filter.contains.toLowerCase())));
         }
         if (filter.type) {
             result = result.filter(obj => Object.keys(obj).some(key => key === "type" && obj[key] === filter.type));
         }
-        return result;
+        const startIndex = filter.offset ? filter.offset : 0; 
+        const endIndex = filter.limit ? startIndex + filter.limit : result.length;
+        return result.slice(startIndex, endIndex);  
     }
     /**
      * destroy one or more calls
@@ -419,6 +395,51 @@ export class Sdk {
             });
     }
 
+    getAllPhoneContacts(numOfContactsPerType) {
+        let contacts = [];
+        for (let i=1; i<=numOfContactsPerType; i++) {
+            contacts = contacts.concat(new Contact ({ 
+                id: 'id'+i,
+                type: Constants.CONTACT_TYPE.AGENT,
+                name : ["Agent Name "]+i,
+                phoneNumber: "555555444"+i
+            }))
+        }
+        for (let i=numOfContactsPerType+1; i<=numOfContactsPerType*2; i++) {
+            contacts = contacts.concat(new Contact ({ 
+                id: 'id'+i,
+                type: Constants.CONTACT_TYPE.QUEUE,
+                name : "Queue Name "+i,
+                queue: "Queue"+i
+            }))
+        }
+        for (let i=numOfContactsPerType*2+1; i<=numOfContactsPerType*3; i++) {
+            contacts = contacts.concat(new Contact ({ 
+                id: 'id'+i,
+                type: Constants.CONTACT_TYPE.PHONEBOOK,
+                name : "Phonebook Entry "+i,
+                phoneNumber: "55566644"+i
+            }))
+        }
+        for (let i=numOfContactsPerType*3+1; i<=numOfContactsPerType*4; i++) {
+            contacts = contacts.concat(new Contact ({ 
+                id: 'id'+i,
+                type: Constants.CONTACT_TYPE.PHONENUMBER,
+                name : "Phone Number "+i,
+                phoneNumber: "5557774"+i
+            }))
+        }
+        for (let i=numOfContactsPerType*4+1; i<=numOfContactsPerType*5; i++) {
+            contacts = contacts.concat(new Contact ({ 
+                endpointARN: 'arn'+i,
+                type: Constants.CONTACT_TYPE.PHONENUMBER,
+                name : ["ARN "]+i,
+                phoneNumber: "5555554"+i
+            }))
+        }
+        return contacts;
+    }
+
     getActiveCallsObj() {
         const activeCalls = JSON.parse(localStorage.getItem('activeCalls')) || {};
         Object.keys(activeCalls).forEach(callId => {
@@ -446,6 +467,8 @@ export class Sdk {
             hasSignedRecordingUrl: this.state.agentConfig.hasSignedRecordingUrl,
             signedRecordingUrl: this.state.agentConfig.signedRecordingUrl,
             signedRecordingDuration: this.state.agentConfig.signedRecordingDuration,
+            hasContactSearch: this.state.agentConfig.hasContactSearch,
+            supportsMos: this.state.agentConfig.supportsMos,
             phones: this.state.agentConfig.phones,
             selectedPhone: new Phone (this.state.agentConfig.selectedPhone)
         }));
@@ -632,7 +655,7 @@ export class Sdk {
      * Get Agent Phone Book Contacts
      */
     getPhoneContacts(filter) {
-        const contacts = this.filterContacts(this.state.phoneContacts, filter);
+        var contacts = this.filterContacts(this.state.phoneContacts, filter) ;
         return this.executeAsync("getPhoneContacts", new PhoneContactsResult({
             contacts
         }));
@@ -785,5 +808,26 @@ export class Sdk {
             callAttributes: { participantType: Constants.PARTICIPANT_TYPE.INITIAL_CALLER } });
         this.addCall(call);
         publishEvent({ eventType: Constants.EVENT_TYPE.QUEUED_CALL_STARTED, payload: new CallResult({ call })});
+    }
+
+    /**
+     * Simulate update Audio Stats for MOS
+     */
+    updateAudioStats(audioStats) {
+        this.log("updateAudioStats", audioStats);
+        let statsArray = [];
+        audioStats.forEach(stats => {
+            let inputChannelStats;
+            let outputChannelStats;
+            if (stats.inputChannelStats) {
+                inputChannelStats = new StatsInfo(stats.inputChannelStats);
+            }
+            if (stats.outputChannelStats) {
+                outputChannelStats = new StatsInfo(stats.outputChannelStats);
+            }
+            statsArray.push(new AudioStats({inputChannelStats, outputChannelStats}));
+        });
+        const payload = new AudioStatsGroup({stats: statsArray});
+        publishEvent({ eventType: Constants.EVENT_TYPE.UPDATE_AUDIO_STATS, payload: payload });
     }
 }

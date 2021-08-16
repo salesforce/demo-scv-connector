@@ -5,7 +5,7 @@
  * For full license text, see the LICENSE file in the repo root or https://opensource.org/licenses/BSD-3-Clause
  */
 
-import { Constants } from '@salesforce/scv-connector-base';
+import { Constants } from 'scv-connector-base';
 
 export default {
     LOGIN_SUBMIT: 'LOGIN_SUBMIT',
@@ -71,5 +71,6 @@ export default {
         FAILED_TO_CONNECT_AGENT: "FailedToConnectAgent",
         MISSED_BY_AGENT: "MissedByAgent"
     },
-    REQUEST_CALLBACK : 'REQUEST_CALLBACK'
+    REQUEST_CALLBACK : 'REQUEST_CALLBACK',
+    SEND_AUDIO_STATS: 'SEND_AUDIO_STATS'
 }

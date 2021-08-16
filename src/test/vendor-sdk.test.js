@@ -5,14 +5,14 @@
  * For full license text, see the LICENSE file in the repo root or https://opensource.org/licenses/BSD-3-Clause
  */
 
-jest.mock('@salesforce/scv-connector-base', () => ({
-    ...(jest.requireActual('@salesforce/scv-connector-base')),
+jest.mock('scv-connector-base', () => ({
+    ...(jest.requireActual('scv-connector-base')),
     publishEvent: jest.fn()
 }));
 
 import constants from './testConstants';
 import { publishEvent, GenericResult, PhoneCall, Contact, ParticipantResult, CallInfo, CallResult,
-    LogoutResult, Constants, Phone, AgentStatusInfo, HangupResult } from '@salesforce/scv-connector-base';
+    LogoutResult, Constants, Phone, AgentStatusInfo, HangupResult } from 'scv-connector-base';
 import { Connector } from '../main/connector';
 
 global.console.log = jest.fn(); //do not print console.log 
@@ -641,6 +641,29 @@ describe('Vendor Sdk tests', () => {
     });
 
     describe('getPhoneContacts', () => {
+        beforeEach(() => {
+            vendorSdk.state.phoneContacts = [
+                new Contact({
+                    id: 'id1',
+                    phoneNumber: "555-555-4441",
+                    type: Constants.CONTACT_TYPE.PHONENUMBER,
+                    name: "AgentU"
+                }),
+                new Contact({
+                    id: 'id2',
+                    type: Constants.CONTACT_TYPE.PHONEBOOK,
+                    phoneNumber: "555-555-4442",
+                    name: "AgentV"
+                }),
+                new Contact({
+                    id: 'id3',
+                    type: Constants.CONTACT_TYPE.PHONENUMBER,
+                    name: "AgentW",
+                    phoneNumber: "555-555-4443"
+                })
+            ]
+        });
+        
         it('Should return a valid result without filter', async () => {
             const result = await connector.getPhoneContacts();
             const { contacts } = result;
@@ -663,6 +686,30 @@ describe('Vendor Sdk tests', () => {
             const result = await connector.getPhoneContacts({ type: filter });
             const { contacts } = result;
             expect(contacts).toEqual([contact]);
+        });
+
+        it('Should return a valid result with limit filter', async () => {
+            const result = await connector.getPhoneContacts({ limit: 1 });
+            const { contacts } = result;
+            expect(contacts).toStrictEqual([ vendorSdk.state.phoneContacts[0] ]);
+        });
+
+        it('Should return a valid result with offest filter', async () => {
+            const result = await connector.getPhoneContacts({ offset: 1 });
+            const { contacts } = result;
+            expect(contacts).toStrictEqual([ vendorSdk.state.phoneContacts[1], vendorSdk.state.phoneContacts[2] ]);
+        });
+
+        it('Should return a valid result with limit and offset filter', async () => {
+            const result = await connector.getPhoneContacts({ limit: 1, offset: 1 });
+            const { contacts } = result;
+            expect(contacts).toStrictEqual([ vendorSdk.state.phoneContacts[1] ]);
+        });
+        
+        it('Should return a valid result with limit, offset, contains and type filter', async () => {
+            const result = await connector.getPhoneContacts({ type: Constants.CONTACT_TYPE.PHONEBOOK, contains: "555", limit: 20, offset: 0 });
+            const { contacts } = result;
+            expect(contacts).toStrictEqual([ vendorSdk.state.phoneContacts[1] ]);
         });
     });
 
@@ -809,6 +856,43 @@ describe('Vendor Sdk tests', () => {
             expect(argument.eventType).toEqual(Constants.EVENT_TYPE.QUEUED_CALL_STARTED);
             expect(argument.payload.call.callType.toLowerCase()).toEqual(Constants.CALL_TYPE.CALLBACK.toLowerCase());
             expect(argument.payload.call.phoneNumber).toEqual('100');
+        });
+    });
+
+    describe('updateAudioStats', () => {
+        it('Should publish a update audio stats event successfully', async () => {
+            const stats = [{inputChannelStats: {packetsCount: 90, packetsLost: 10, jitterBufferMillis: 300, roundTripTimeMillis: 350}, outputChannelStats: {packetsCount: 90, packetsLost: 10, jitterBufferMillis: 300, roundTripTimeMillis: 350}}];
+            connector.sdk.updateAudioStats(stats);
+            const argument = publishEvent.mock.calls[0][0];
+            expect(argument.eventType).toEqual(Constants.EVENT_TYPE.UPDATE_AUDIO_STATS);
+            expect(argument.payload.stats[0].inputChannelStats.packetsCount).toEqual(stats[0].inputChannelStats.packetsCount);
+            expect(argument.payload.stats[0].inputChannelStats.packetsLost).toEqual(stats[0].inputChannelStats.packetsLost);
+            expect(argument.payload.stats[0].inputChannelStats.jitterBufferMillis).toEqual(stats[0].inputChannelStats.jitterBufferMillis);
+            expect(argument.payload.stats[0].inputChannelStats.roundTripTimeMillis).toEqual(stats[0].inputChannelStats.roundTripTimeMillis);
+            expect(argument.payload.stats[0].outputChannelStats.packetsCount).toEqual(stats[0].outputChannelStats.packetsCount);
+            expect(argument.payload.stats[0].outputChannelStats.packetsLost).toEqual(stats[0].outputChannelStats.packetsLost);
+            expect(argument.payload.stats[0].outputChannelStats.jitterBufferMillis).toEqual(stats[0].outputChannelStats.jitterBufferMillis);
+            expect(argument.payload.stats[0].outputChannelStats.roundTripTimeMillis).toEqual(stats[0].outputChannelStats.roundTripTimeMillis);
+        });
+        it('Should publish a update audio stats event successfully with only input channel', async () => {
+            const stats = [{inputChannelStats: {packetsCount: 90, packetsLost: 10, jitterBufferMillis: 300, roundTripTimeMillis: 350}}];
+            connector.sdk.updateAudioStats(stats);
+            const argument = publishEvent.mock.calls[0][0];
+            expect(argument.eventType).toEqual(Constants.EVENT_TYPE.UPDATE_AUDIO_STATS);
+            expect(argument.payload.stats[0].inputChannelStats.packetsCount).toEqual(stats[0].inputChannelStats.packetsCount);
+            expect(argument.payload.stats[0].inputChannelStats.packetsLost).toEqual(stats[0].inputChannelStats.packetsLost);
+            expect(argument.payload.stats[0].inputChannelStats.jitterBufferMillis).toEqual(stats[0].inputChannelStats.jitterBufferMillis);
+            expect(argument.payload.stats[0].inputChannelStats.roundTripTimeMillis).toEqual(stats[0].inputChannelStats.roundTripTimeMillis);
+        });
+        it('Should publish a update audio stats event successfully with only output channel', async () => {
+            const stats = [{outputChannelStats: {packetsCount: 90, packetsLost: 10, jitterBufferMillis: 300, roundTripTimeMillis: 350}}];
+            connector.sdk.updateAudioStats(stats);
+            const argument = publishEvent.mock.calls[0][0];
+            expect(argument.eventType).toEqual(Constants.EVENT_TYPE.UPDATE_AUDIO_STATS);
+            expect(argument.payload.stats[0].outputChannelStats.packetsCount).toEqual(stats[0].outputChannelStats.packetsCount);
+            expect(argument.payload.stats[0].outputChannelStats.packetsLost).toEqual(stats[0].outputChannelStats.packetsLost);
+            expect(argument.payload.stats[0].outputChannelStats.jitterBufferMillis).toEqual(stats[0].outputChannelStats.jitterBufferMillis);
+            expect(argument.payload.stats[0].outputChannelStats.roundTripTimeMillis).toEqual(stats[0].outputChannelStats.roundTripTimeMillis);
         });
     });
 });

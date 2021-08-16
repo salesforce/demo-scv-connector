@@ -6,7 +6,7 @@
  */
 
 import Constants from '../common/constants'
-import { Contact, publishEvent, publishError } from 'scv-connector-base';
+import { Contact, publishEvent, publishError } from '@salesforce/scv-connector-base';
 
 export function initializeRemoteController(connector) {
     const requestBroadcastChannel = new BroadcastChannel('rc-request');

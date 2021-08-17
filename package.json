@@ -1,7 +1,7 @@
 {
-  "name": "demo-connector",
+  "name": "scv-demo-connector",
   "version": "1.0.0",
-  "description": "demo-connector",
+  "description": "Service Cloud Voice Demo Connector",
   "private": false,
   "scripts": {
     "test": "gulp lint && gulp test",
@@ -48,7 +48,7 @@
   },
   "dependencies": {
     "@babel/runtime": "^7.11.2",
-    "@salesforce/scv-connector-base": "^3.1.51",
+    "@salesforce/scv-connector-base": "^3.1.80",
     "axios": "^0.21.1",
     "custom-env": "^2.0.1",
     "express": "^4.17.1",

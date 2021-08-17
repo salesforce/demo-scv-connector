@@ -11,17 +11,18 @@
  */
 
 /** @module connector **/
-import { Constants } from '@salesforce/scv-connector-base';
+import { Constants, VendorConnector } from '@salesforce/scv-connector-base';
 import { Sdk } from './vendor-sdk';
 /** 
  * Class representing a Service Cloud Voice Demo Connector
  */
-export class Connector {
+export class Connector extends VendorConnector {
     /**
      * Create a Connector instance.
      * @param {object} sdk - Telephony SDK
      */
     constructor(state) {
+        super();
         this.sdk = new Sdk(state);
     }
     /**

@@ -18,6 +18,8 @@ const signedRecordingUrl = document.getElementById('signed-recording-url');
 const signedRecordingDuration = document.getElementById('signed-recording-duration');
 const signedRecordingDetails = document.getElementById('signed-recording-url-details');
 const hasMergeCheckbox = document.getElementById('hasMergeCheckbox');
+const hasContactSearchCheckbox = document.getElementById('hasContactSearchCheckbox');
+const supportsMosCheckbox = document.getElementById('supportsMosCheckbox');
 const callIsRecordingPaused = document.getElementById('callIsRecordingPaused');
 const callIsOnHold = document.getElementById('callIsOnHold');
 const callIsMuted = document.getElementById('callIsMuted');
@@ -82,6 +84,8 @@ const agentMissedCallButton =  document.getElementById('agent-missed-call');
 const callErrorButton =  document.getElementById('call-error');
 const demoTitle = document.getElementById('demo-title');
 const errorSpan = document.getElementById('error-span');
+const sendAudioStatsButton = document.getElementById('send-audioStats-button');
+const sendAudioStatsTextArea = document.getElementById('send-audioStats-text');
 
 const hardphoneRadio = document.getElementById('hardphone');
 const softphoneRadio = document.getElementById('softphone');
@@ -141,6 +145,8 @@ requestBroadcastChannel.addEventListener('message', (event) => {
                 hasRecordCheckbox.checked = event.data.value.hasRecord;
                 hasSwapCheckbox.checked = event.data.value.hasSwap;
                 hasMergeCheckbox.checked = event.data.value.hasMerge;
+                hasContactSearchCheckbox.checked = event.data.value.hasContactSearch;
+                supportsMosCheckbox.checked = event.data.value.supportsMos;
                 hasSignedRecordingUrlCheckbox.checked = event.data.value.hasSignedRecordingUrl;
                 signedRecordingUrl.value = event.data.value.signedRecordingUrl ? event.data.value.signedRecordingUrl : '';
                 signedRecordingDuration.value = event.data.value.signedRecordingDuration ? event.data.value.signedRecordingDuration : '';
@@ -219,6 +225,8 @@ throwErrorCheckbox.addEventListener('change', throwErrorChanged);
 hasMuteCheckbox.addEventListener('change', setAgentConfig);
 hasRecordCheckbox.addEventListener('change', setAgentConfig);
 hasMergeCheckbox.addEventListener('change', setAgentConfig);
+hasContactSearchCheckbox.addEventListener('change', setAgentConfig);
+supportsMosCheckbox.addEventListener('change', setAgentConfig);
 hasSwapCheckbox.addEventListener('change', setAgentConfig);
 hasSignedRecordingUrlCheckbox.addEventListener('change', setAgentConfig);
 signedRecordingUrl.addEventListener('change', setAgentConfig);
@@ -259,6 +267,7 @@ swapButton.addEventListener('click', swap);
 conferenceButton.addEventListener('click', conference);
 agentMissedCallButton.addEventListener('click', agentMissedCall);
 callErrorButton.addEventListener('click', callError);
+sendAudioStatsButton.addEventListener('click', sendAudioStats);
 
 function showLoginChanged() {
     requestBroadcastChannel.postMessage({
@@ -285,6 +294,8 @@ function setAgentConfig() {
             hasRecord: hasRecordCheckbox.checked,
             hasSwap: hasSwapCheckbox.checked,
             hasMerge: hasMergeCheckbox.checked,
+            hasContactSearch: hasContactSearchCheckbox.checked,
+            supportsMos: supportsMosCheckbox.checked,
             hasSignedRecordingUrl: hasSignedRecordingUrlCheckbox.checked,
             signedRecordingUrl: signedRecordingUrl.value,
             signedRecordingDuration: signedRecordingDuration.value,
@@ -586,5 +597,13 @@ function sendMessage() {
     requestBroadcastChannel.postMessage({
         type: Constants.MESSAGE_FROM_CONNECTOR,
         message : { message }
+    });
+}
+
+function sendAudioStats() {
+    const audioStats = JSON.parse(sendAudioStatsTextArea.value);
+    requestBroadcastChannel.postMessage({
+        type: Constants.SEND_AUDIO_STATS,
+        audioStats : audioStats
     });
 }

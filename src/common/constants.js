@@ -71,5 +71,6 @@ export default {
         FAILED_TO_CONNECT_AGENT: "FailedToConnectAgent",
         MISSED_BY_AGENT: "MissedByAgent"
     },
-    REQUEST_CALLBACK : 'REQUEST_CALLBACK'
+    REQUEST_CALLBACK : 'REQUEST_CALLBACK',
+    SEND_AUDIO_STATS: 'SEND_AUDIO_STATS'
 }

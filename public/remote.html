@@ -653,11 +653,34 @@
                                 Audio Stats
                             </label>
                             <div class="slds-form-element__control slds-m-bottom_small">
-                                <textarea id="send-audioStats-text" class="slds-textarea" placeholder="Use the AudioStats format provided in the Partner Playbook.">
-[
-    {"inputChannelStats": {"packetsCount":20, "packetsLost":2, "jitterBufferMillis":300, "roundTripTimeMillis":320}, "outputChannelStats": {"packetsCount":30, "packetsLost":1, "jitterBufferMillis":270, "roundTripTimeMillis":370}},
-    {"outputChannelStats": {"packetsCount":30, "packetsLost":1, "jitterBufferMillis":270, "roundTripTimeMillis":370}}
-]
+                                <textarea id="send-audioStats-text" class="slds-textarea" rows="20" placeholder="Use the AudioStats format provided in the Partner Playbook.">
+{
+    "callId": "{vendorCallKey}",
+    "isAudioStatsCompleted": false,
+    "stats": [{
+            "inputChannelStats": {
+                "packetsCount": 20,
+                "packetsLost": 2,
+                "jitterBufferMillis": 300,
+                "roundTripTimeMillis": 320
+            },
+            "outputChannelStats": {
+                "packetsCount": 30,
+                "packetsLost": 1,
+                "jitterBufferMillis": 270,
+                "roundTripTimeMillis": 370
+            }
+        },
+        {
+            "outputChannelStats": {
+                "packetsCount": 30,
+                "packetsLost": 1,
+                "jitterBufferMillis": 270,
+                "roundTripTimeMillis": 370
+            }
+        }
+    ]
+}
                                 </textarea>
                             </div>
                             <button class="slds-button slds-button_outline-brand" id="send-audioStats-button">Send</button>

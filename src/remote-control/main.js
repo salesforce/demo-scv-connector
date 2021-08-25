@@ -202,6 +202,10 @@ function prettyPrintCalls(activeCalls) {
                 elem.value += `${key}: ${JSON.stringify(call[key], null, 2)}\n`;
             })
         })
+        const mosElem = sendAudioStatsTextArea;
+        let audioStats = JSON.parse(mosElem.value);
+        audioStats.callId = activeCalls[0].callId;
+        mosElem.value = JSON.stringify(audioStats, undefined, 4);
     }
 }
 activeCallsCard.style.display = "none";

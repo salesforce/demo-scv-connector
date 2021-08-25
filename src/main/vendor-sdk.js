@@ -16,7 +16,7 @@
  /** @module vendor-sdk **/
  import { publishEvent, ActiveCallsResult, AgentConfigResult, RecordingToggleResult, ParticipantResult, MuteToggleResult,
     PhoneContactsResult, CallResult, HangupResult, HoldToggleResult, InitResult, GenericResult, SignedRecordingUrlResult,
-    LogoutResult, CallInfo, PhoneCall, PhoneCallAttributes, Contact, Constants, Phone, StatsInfo, AudioStats, AudioStatsGroup } from '@salesforce/scv-connector-base';
+    LogoutResult, CallInfo, PhoneCall, PhoneCallAttributes, Contact, Constants, Phone, StatsInfo, AudioStats, AudioStatsElement } from '@salesforce/scv-connector-base';
 
 /** 
  * Class representing a Phone Call
@@ -816,7 +816,7 @@ export class Sdk {
     updateAudioStats(audioStats) {
         this.log("updateAudioStats", audioStats);
         let statsArray = [];
-        audioStats.forEach(stats => {
+        audioStats.stats.forEach(stats => {
             let inputChannelStats;
             let outputChannelStats;
             if (stats.inputChannelStats) {
@@ -825,9 +825,9 @@ export class Sdk {
             if (stats.outputChannelStats) {
                 outputChannelStats = new StatsInfo(stats.outputChannelStats);
             }
-            statsArray.push(new AudioStats({inputChannelStats, outputChannelStats}));
+            statsArray.push(new AudioStatsElement({inputChannelStats, outputChannelStats}));
         });
-        const payload = new AudioStatsGroup({stats: statsArray});
+        const payload = new AudioStats({stats: statsArray, callId: audioStats.callId, isAudioStatsCompleted: audioStats.isAudioStatsCompleted});
         publishEvent({ eventType: Constants.EVENT_TYPE.UPDATE_AUDIO_STATS, payload: payload });
     }
 }

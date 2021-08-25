@@ -861,38 +861,38 @@ describe('Vendor Sdk tests', () => {
 
     describe('updateAudioStats', () => {
         it('Should publish a update audio stats event successfully', async () => {
-            const stats = [{inputChannelStats: {packetsCount: 90, packetsLost: 10, jitterBufferMillis: 300, roundTripTimeMillis: 350}, outputChannelStats: {packetsCount: 90, packetsLost: 10, jitterBufferMillis: 300, roundTripTimeMillis: 350}}];
-            connector.sdk.updateAudioStats(stats);
+            const audioStats = {stats: [{inputChannelStats: {packetsCount: 90, packetsLost: 10, jitterBufferMillis: 300, roundTripTimeMillis: 350}, outputChannelStats: {packetsCount: 90, packetsLost: 10, jitterBufferMillis: 300, roundTripTimeMillis: 350}}]};
+            connector.sdk.updateAudioStats(audioStats);
             const argument = publishEvent.mock.calls[0][0];
             expect(argument.eventType).toEqual(Constants.EVENT_TYPE.UPDATE_AUDIO_STATS);
-            expect(argument.payload.stats[0].inputChannelStats.packetsCount).toEqual(stats[0].inputChannelStats.packetsCount);
-            expect(argument.payload.stats[0].inputChannelStats.packetsLost).toEqual(stats[0].inputChannelStats.packetsLost);
-            expect(argument.payload.stats[0].inputChannelStats.jitterBufferMillis).toEqual(stats[0].inputChannelStats.jitterBufferMillis);
-            expect(argument.payload.stats[0].inputChannelStats.roundTripTimeMillis).toEqual(stats[0].inputChannelStats.roundTripTimeMillis);
-            expect(argument.payload.stats[0].outputChannelStats.packetsCount).toEqual(stats[0].outputChannelStats.packetsCount);
-            expect(argument.payload.stats[0].outputChannelStats.packetsLost).toEqual(stats[0].outputChannelStats.packetsLost);
-            expect(argument.payload.stats[0].outputChannelStats.jitterBufferMillis).toEqual(stats[0].outputChannelStats.jitterBufferMillis);
-            expect(argument.payload.stats[0].outputChannelStats.roundTripTimeMillis).toEqual(stats[0].outputChannelStats.roundTripTimeMillis);
+            expect(argument.payload.stats[0].inputChannelStats.packetsCount).toEqual(audioStats.stats[0].inputChannelStats.packetsCount);
+            expect(argument.payload.stats[0].inputChannelStats.packetsLost).toEqual(audioStats.stats[0].inputChannelStats.packetsLost);
+            expect(argument.payload.stats[0].inputChannelStats.jitterBufferMillis).toEqual(audioStats.stats[0].inputChannelStats.jitterBufferMillis);
+            expect(argument.payload.stats[0].inputChannelStats.roundTripTimeMillis).toEqual(audioStats.stats[0].inputChannelStats.roundTripTimeMillis);
+            expect(argument.payload.stats[0].outputChannelStats.packetsCount).toEqual(audioStats.stats[0].outputChannelStats.packetsCount);
+            expect(argument.payload.stats[0].outputChannelStats.packetsLost).toEqual(audioStats.stats[0].outputChannelStats.packetsLost);
+            expect(argument.payload.stats[0].outputChannelStats.jitterBufferMillis).toEqual(audioStats.stats[0].outputChannelStats.jitterBufferMillis);
+            expect(argument.payload.stats[0].outputChannelStats.roundTripTimeMillis).toEqual(audioStats.stats[0].outputChannelStats.roundTripTimeMillis);
         });
         it('Should publish a update audio stats event successfully with only input channel', async () => {
-            const stats = [{inputChannelStats: {packetsCount: 90, packetsLost: 10, jitterBufferMillis: 300, roundTripTimeMillis: 350}}];
-            connector.sdk.updateAudioStats(stats);
+            const audioStats = {stats: [{inputChannelStats: {packetsCount: 90, packetsLost: 10, jitterBufferMillis: 300, roundTripTimeMillis: 350}}]};
+            connector.sdk.updateAudioStats(audioStats);
             const argument = publishEvent.mock.calls[0][0];
             expect(argument.eventType).toEqual(Constants.EVENT_TYPE.UPDATE_AUDIO_STATS);
-            expect(argument.payload.stats[0].inputChannelStats.packetsCount).toEqual(stats[0].inputChannelStats.packetsCount);
-            expect(argument.payload.stats[0].inputChannelStats.packetsLost).toEqual(stats[0].inputChannelStats.packetsLost);
-            expect(argument.payload.stats[0].inputChannelStats.jitterBufferMillis).toEqual(stats[0].inputChannelStats.jitterBufferMillis);
-            expect(argument.payload.stats[0].inputChannelStats.roundTripTimeMillis).toEqual(stats[0].inputChannelStats.roundTripTimeMillis);
+            expect(argument.payload.stats[0].inputChannelStats.packetsCount).toEqual(audioStats.stats[0].inputChannelStats.packetsCount);
+            expect(argument.payload.stats[0].inputChannelStats.packetsLost).toEqual(audioStats.stats[0].inputChannelStats.packetsLost);
+            expect(argument.payload.stats[0].inputChannelStats.jitterBufferMillis).toEqual(audioStats.stats[0].inputChannelStats.jitterBufferMillis);
+            expect(argument.payload.stats[0].inputChannelStats.roundTripTimeMillis).toEqual(audioStats.stats[0].inputChannelStats.roundTripTimeMillis);
         });
         it('Should publish a update audio stats event successfully with only output channel', async () => {
-            const stats = [{outputChannelStats: {packetsCount: 90, packetsLost: 10, jitterBufferMillis: 300, roundTripTimeMillis: 350}}];
-            connector.sdk.updateAudioStats(stats);
+            const audioStats = {stats: [{outputChannelStats: {packetsCount: 90, packetsLost: 10, jitterBufferMillis: 300, roundTripTimeMillis: 350}}]};
+            connector.sdk.updateAudioStats(audioStats);
             const argument = publishEvent.mock.calls[0][0];
             expect(argument.eventType).toEqual(Constants.EVENT_TYPE.UPDATE_AUDIO_STATS);
-            expect(argument.payload.stats[0].outputChannelStats.packetsCount).toEqual(stats[0].outputChannelStats.packetsCount);
-            expect(argument.payload.stats[0].outputChannelStats.packetsLost).toEqual(stats[0].outputChannelStats.packetsLost);
-            expect(argument.payload.stats[0].outputChannelStats.jitterBufferMillis).toEqual(stats[0].outputChannelStats.jitterBufferMillis);
-            expect(argument.payload.stats[0].outputChannelStats.roundTripTimeMillis).toEqual(stats[0].outputChannelStats.roundTripTimeMillis);
+            expect(argument.payload.stats[0].outputChannelStats.packetsCount).toEqual(audioStats.stats[0].outputChannelStats.packetsCount);
+            expect(argument.payload.stats[0].outputChannelStats.packetsLost).toEqual(audioStats.stats[0].outputChannelStats.packetsLost);
+            expect(argument.payload.stats[0].outputChannelStats.jitterBufferMillis).toEqual(audioStats.stats[0].outputChannelStats.jitterBufferMillis);
+            expect(argument.payload.stats[0].outputChannelStats.roundTripTimeMillis).toEqual(audioStats.stats[0].outputChannelStats.roundTripTimeMillis);
         });
     });
 });

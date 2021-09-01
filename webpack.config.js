@@ -1,13 +1,11 @@
 require('custom-env').env();
 
 module.exports = {
-    mode: 'development',
     entry: {
         main: './src/main/index.js',
         remote: './src/remote-control/main.js',
         login: './src/login/index.js'
     },
-    devtool: 'source-map',
     devServer: {
         https: true,
         contentBase: __dirname + '/public',
@@ -42,7 +40,7 @@ module.exports = {
     },
     output: {
         publicPath: '/assets/',
-        path: __dirname + 'dist',
+        path: __dirname + '/dist/',
         filename: '[name].bundle.js'
     }
 };

@@ -1,15 +1,25 @@
+<!--  uncomment for use in visualforce page <apex:page
+  docType="html-5.0"
+  applyHtmlTag="false"
+  applyBodyTag="false"
+  showHeader="false"
+  sidebar="false"
+  standardStylesheets="false"
+  title="Unused Title"> -->
 <!-- 
     Copyright (c) 2021, salesforce.com, inc.
     All rights reserved.
     SPDX-License-Identifier: BSD-3-Clause
     For full license text, see the LICENSE file in the repo root or https://opensource.org/licenses/BSD-3-Clause
 -->
-
-  <html>
+<html 
+    style="background-color: #fafaf9"
+    xmlns="http://www.w3.org/2000/svg"
+    xmlns:xlink="http://www.w3.org/1999/xlink">
         <head>
             <title>Demo Phone Simulator</title>
-            <!-- <link rel="stylesheet" type="text/css" href="{!$Resource.slds_stylesheet}" media="screen"/> -->
-            <link rel="stylesheet" type="text/css" href="assets/slds-stylesheet.css" media="screen"/>
+            <!-- uncomment and replace with line below for use in visualforce page <link rel="stylesheet" type="text/css" href="{!$Resource.slds_stylesheet}" media="screen"/> -->
+            <link rel="stylesheet" type="text/css" href="assets/slds-stylesheet.css" media="screen"></link>
         </head>
     
         <body>
@@ -36,7 +46,7 @@
                         <div class="slds-form-element">
                             <div class="slds-form-element__control">
                                 <div class="slds-checkbox">
-                                    <input type="checkbox" name="options" id="hasMuteCheckbox" checked="" />
+                                    <input type="checkbox" name="options" id="hasMuteCheckbox" checked=""></input>
                                     <label class="slds-checkbox__label" for="hasMuteCheckbox">
                                     <span class="slds-checkbox_faux"></span>
                                     <span class="slds-form-element__label">Let agents mute calls</span>
@@ -47,7 +57,7 @@
                         <div class="slds-form-element">
                             <div class="slds-form-element__control">
                                 <div class="slds-checkbox">
-                                    <input type="checkbox" name="options" id="hasRecordCheckbox" checked="" />
+                                    <input type="checkbox" name="options" id="hasRecordCheckbox" checked=""></input>
                                     <label class="slds-checkbox__label" for="hasRecordCheckbox">
                                     <span class="slds-checkbox_faux"></span>
                                     <span class="slds-form-element__label">Let agents record calls</span>
@@ -58,7 +68,7 @@
                         <div class="slds-form-element">
                             <div class="slds-form-element__control">
                                 <div class="slds-checkbox">
-                                    <input type="checkbox" name="options" id="hasSwapCheckbox" checked="" />
+                                    <input type="checkbox" name="options" id="hasSwapCheckbox" checked=""></input>
                                     <label class="slds-checkbox__label" for="hasSwapCheckbox">
                                         <span class="slds-checkbox_faux"></span>
                                         <span class="slds-form-element__label">Let agents swap calls</span>
@@ -69,7 +79,7 @@
                         <div class="slds-form-element">
                             <div class="slds-form-element__control">
                                 <div class="slds-checkbox">
-                                    <input type="checkbox" name="options" id="hasMergeCheckbox" checked="" />
+                                    <input type="checkbox" name="options" id="hasMergeCheckbox" checked=""></input>
                                     <label class="slds-checkbox__label" for="hasMergeCheckbox">
                                         <span class="slds-checkbox_faux"></span>
                                         <span class="slds-form-element__label">Let agents merge calls</span>
@@ -80,7 +90,7 @@
                         <div class="slds-form-element">
                             <div class="slds-form-element__control">
                                 <div class="slds-checkbox">
-                                    <input type="checkbox" name="options" id="hasContactSearchCheckbox" checked="" />
+                                    <input type="checkbox" name="options" id="hasContactSearchCheckbox" checked=""></input>
                                     <label class="slds-checkbox__label" for="hasContactSearchCheckbox">
                                         <span class="slds-checkbox_faux"></span>
                                         <span class="slds-form-element__label">User supports contact search</span>
@@ -91,7 +101,7 @@
                         <div class="slds-form-element">
                             <div class="slds-form-element__control">
                                 <div class="slds-checkbox">
-                                    <input type="checkbox" name="options" id="supportsMosCheckbox" checked="" />
+                                    <input type="checkbox" name="options" id="supportsMosCheckbox" checked=""></input>
                                     <label class="slds-checkbox__label" for="supportsMosCheckbox">
                                         <span class="slds-checkbox_faux"></span>
                                         <span class="slds-form-element__label">Vendor supports MOS</span>
@@ -102,7 +112,7 @@
                         <div class="slds-form-element">
                             <div class="slds-form-element__control">
                                 <div class="slds-checkbox">
-                                    <input type="checkbox" name="options" id="hasSignedRecordingUrlCheckbox" />
+                                    <input type="checkbox" name="options" id="hasSignedRecordingUrlCheckbox"></input>
                                     <label class="slds-checkbox__label" for="hasSignedRecordingUrlCheckbox">
                                         <span class="slds-checkbox_faux"></span>
                                         <span class="slds-form-element__label">User supports signed recording URL</span>
@@ -115,7 +125,7 @@
                                                 Signed Recording URL
                                             </label>
                                             <div class="slds-form-element__control">
-                                                <input type="text" id="signed-recording-url" placeholder="" maxlength="1000" required="" class="slds-input" />
+                                                <input type="text" id="signed-recording-url" placeholder="" maxlength="1000" required="" class="slds-input"></input>
                                             </div>
                                         </div>
                                         <div class="slds-col slds-size_1-of-3">
@@ -123,7 +133,7 @@
                                                 Recording Duration (Seconds)
                                             </label>
                                             <div class="slds-form-element__control">
-                                                <input type="number" id="signed-recording-duration" placeholder="" required="" class="slds-input" />
+                                                <input type="number" id="signed-recording-duration" placeholder="" required="" class="slds-input"></input>
                                             </div>
                                         </div>
                                     </div>
@@ -132,7 +142,7 @@
                             <div class="slds-form-element">
                             <div id="agentPhones" class="slds-form-element__control slds-grid slds-container--small  slds-m-top_medium">
                                 <span class="slds-radio">
-                                    <input type="radio" id="softphone" value="softphone" name="default" checked="" />
+                                    <input type="radio" id="softphone" value="softphone" name="default" checked=""></input>
                                     <label class="slds-radio__label" for="softphone">
                                     <span class="slds-radio_faux"></span>
                                     <span class="slds-form-element__label">Soft Phone</span>
@@ -166,21 +176,21 @@
                     <div class="slds-card__body slds-card__body_inner">
                         <div class="slds-form-element">
                             <span class="slds-form-element__label">Call initial state: </span> <div class="slds-checkbox">
-                                    <input type="checkbox" name="options" id="callIsRecordingPaused"/>
+                                    <input type="checkbox" name="options" id="callIsRecordingPaused"></input>
                                     <label class="slds-checkbox__label" for="callIsRecordingPaused">
                                         <span class="slds-checkbox_faux"></span>
                                         <span class="slds-form-element__label">recording paused</span>
                                     </label>
                                 </div>
                                 <div class="slds-checkbox">
-                                    <input type="checkbox" name="options" id="callIsMuted"/>
+                                    <input type="checkbox" name="options" id="callIsMuted"></input>
                                     <label class="slds-checkbox__label" for="callIsMuted">
                                         <span class="slds-checkbox_faux"></span>
                                         <span class="slds-form-element__label">muted</span>
                                     </label>
                                 </div>
                                 <div class="slds-checkbox">
-                                    <input type="checkbox" name="options" id="callIsOnHold"/>
+                                    <input type="checkbox" name="options" id="callIsOnHold"></input>
                                     <label class="slds-checkbox__label" for="callIsOnHold">
                                         <span class="slds-checkbox_faux"></span>
                                         <span class="slds-form-element__label">on hold</span>
@@ -193,7 +203,7 @@
                         <div class="slds-form-element">
                             <div class="slds-form-element__control">
                                 <div class="slds-checkbox">
-                                    <input type="checkbox" name="options" id="callHasAccept" checked="" />
+                                    <input type="checkbox" name="options" id="callHasAccept" checked=""></input>
                                     <label class="slds-checkbox__label" for="callHasAccept">
                                         <span class="slds-checkbox_faux"></span>
                                         <span class="slds-form-element__label">Accept Call</span>
@@ -204,7 +214,7 @@
                         <div class="slds-form-element">
                             <div class="slds-form-element__control">
                                 <div class="slds-checkbox">
-                                    <input type="checkbox" name="options" id="callHasDecline" checked="" />
+                                    <input type="checkbox" name="options" id="callHasDecline" checked=""></input>
                                     <label class="slds-checkbox__label" for="callHasDecline">
                                         <span class="slds-checkbox_faux"></span>
                                         <span class="slds-form-element__label">Decline Call</span>
@@ -215,7 +225,7 @@
                         <div class="slds-form-element">
                             <div class="slds-form-element__control">
                                 <div class="slds-checkbox">
-                                    <input type="checkbox" name="options" id="callHasAddParticipant" checked="" />
+                                    <input type="checkbox" name="options" id="callHasAddParticipant" checked=""></input>
                                     <label class="slds-checkbox__label" for="callHasAddParticipant">
                                         <span class="slds-checkbox_faux"></span>
                                         <span class="slds-form-element__label">Add Participant</span>
@@ -228,7 +238,7 @@
                         <div class="slds-form-element">
                             <div class="slds-form-element__control">
                                 <div class="slds-checkbox">
-                                    <input type="checkbox" name="options" id="callHasMute" checked="" />
+                                    <input type="checkbox" name="options" id="callHasMute" checked=""></input>
                                     <label class="slds-checkbox__label" for="callHasMute">
                                     <span class="slds-checkbox_faux"></span>
                                     <span class="slds-form-element__label">Mute</span>
@@ -239,7 +249,7 @@
                         <div class="slds-form-element">
                             <div class="slds-form-element__control">
                                 <div class="slds-checkbox">
-                                    <input type="checkbox" name="options" id="callHasHold" checked="" />
+                                    <input type="checkbox" name="options" id="callHasHold" checked=""></input>
                                     <label class="slds-checkbox__label" for="callHasHold">
                                     <span class="slds-checkbox_faux"></span>
                                     <span class="slds-form-element__label">Hold</span>
@@ -250,7 +260,7 @@
                         <div class="slds-form-element">
                             <div class="slds-form-element__control">
                                 <div class="slds-checkbox">
-                                    <input type="checkbox" name="options" id="callHasRecord" checked="" />
+                                    <input type="checkbox" name="options" id="callHasRecord" checked=""></input>
                                     <label class="slds-checkbox__label" for="callHasRecord">
                                         <span class="slds-checkbox_faux"></span>
                                         <span class="slds-form-element__label">Record</span>
@@ -263,7 +273,7 @@
                         <div class="slds-form-element">
                             <div class="slds-form-element__control">
                                 <div class="slds-checkbox">
-                                    <input type="checkbox" name="options" id="callHasExtensionToggle" checked="" />
+                                    <input type="checkbox" name="options" id="callHasExtensionToggle" checked=""></input>
                                     <label class="slds-checkbox__label" for="callHasExtensionToggle">
                                         <span class="slds-checkbox_faux"></span>
                                         <span class="slds-form-element__label">Extension</span>
@@ -274,7 +284,7 @@
                         <div class="slds-form-element">
                             <div class="slds-form-element__control">
                                 <div class="slds-checkbox">
-                                    <input type="checkbox" name="options" id="callHasSwap" checked="" />
+                                    <input type="checkbox" name="options" id="callHasSwap" checked=""></input>
                                     <label class="slds-checkbox__label" for="callHasSwap">
                                         <span class="slds-checkbox_faux"></span>
                                         <span class="slds-form-element__label">Swap</span>
@@ -285,7 +295,7 @@
                         <div class="slds-form-element">
                             <div class="slds-form-element__control">
                                 <div class="slds-checkbox">
-                                    <input type="checkbox" name="options" id="callHasConference" checked="" />
+                                    <input type="checkbox" name="options" id="callHasConference" checked=""></input>
                                     <label class="slds-checkbox__label" for="callHasConference">
                                         <span class="slds-checkbox_faux"></span>
                                         <span class="slds-form-element__label">Conference</span>
@@ -297,7 +307,7 @@
                     </div>
                     </div>
                         <div class="slds-card__body slds-card__body_inner slds-form-element__control slds-input-has-fixed-addon slds-m-bottom_small">
-                            <input type="text" id="phoneNumber-input" placeholder="Enter a phone number..." aria-labelledby="fixed-text-label fixed-text-addon-pre fixed-text-addon-post" class="slds-input" />
+                            <input type="text" id="phoneNumber-input" placeholder="Enter a phone number..." aria-labelledby="fixed-text-label fixed-text-addon-pre fixed-text-addon-post" class="slds-input"></input>
                             <button class="slds-button slds-button_outline-brand" id="new-inbound-call">Inbound&nbsp;Call</button>
                             <button class="slds-button slds-button_outline-brand" id="start-outbound-call">Outbound&nbsp;Call</button>
                             <button class="slds-button slds-button_outline-brand slds-button" id="add-participant">Add&nbsp;Participant</button>
@@ -319,7 +329,7 @@
                                     <div class="slds-dropdown-trigger slds-dropdown-trigger_click slds-button_last" id="participant-types-options">
                                         <button class="slds-button slds-button_icon slds-button_icon-brand" aria-haspopup="true" title="Participant Types options" id="participant-types">
                                             <svg class="slds-button__icon" aria-hidden="true">
-                                                <!-- <use xlink:href="{!$Resource.symbols}#hide"></use> -->
+                                                <!-- uncomment and replace with line below for use in visualforce page <use xlink:href="{!$Resource.symbols}#hide"></use> -->
                                                 <use xlink:href="/assets/symbols.svg#down"></use>
                                             </svg>
                                             <span class="slds-assistive-text">End Call Participant Types</span>
@@ -402,12 +412,12 @@
                         <div class="slds-grid"> 
                             <div class="slds-col slds-size_1-of-2 slds-form-element slds-m-bottom_medium">
                                 <div class="slds-form-element__control">
-                                    <textarea readonly rows="5" id="active-calls1-text" class="slds-textarea"></textarea>
+                                    <textarea readonly="true" rows="5" id="active-calls1-text" class="slds-textarea"></textarea>
                                 </div>
                             </div>
                             <div class="slds-col slds-size_1-of-2 slds-form-element slds-m-bottom_medium">
                                 <div class="slds-form-element__control">
-                                    <textarea readonly rows="5" id="active-calls2-text" class="slds-textarea"></textarea>
+                                    <textarea readonly="true" rows="5" id="active-calls2-text" class="slds-textarea"></textarea>
                                 </div>
                             </div>
                         </div>
@@ -433,13 +443,13 @@
                         <div class="slds-form-element">
                             <label class="slds-form-element__label" for="form-element-01">Voice Call <strong>vendorCallKey</strong> (Not Required for Inbound Calls)</label>
                             <div class="slds-form-element__control">
-                            <input type="text" id="transcription-vendor-call-key" placeholder="Voice Call vendorCallKey" class="slds-input" />
+                            <input type="text" id="transcription-vendor-call-key" placeholder="Voice Call vendorCallKey" class="slds-input"></input>
                             </div>
                         </div>
                         <div class="slds-form-element">
                             <label class="slds-form-element__label" for="form-element-01">Customer Phone Number (Not Required for Inbound Calls)</label>
                             <div class="slds-form-element__control">
-                            <input type="text" id="transcription-customer-phone-number" placeholder="Customer Phone Number" class="slds-input" />
+                            <input type="text" id="transcription-customer-phone-number" placeholder="Customer Phone Number" class="slds-input"></input>
                             </div>
                         </div>
                     </div>
@@ -452,7 +462,7 @@
                                     <div class="slds-dropdown-trigger slds-dropdown-trigger_click slds-button_last" id="sender-types-options">
                                         <button class="slds-button slds-button_icon slds-button_icon-brand" aria-haspopup="true" title="Sender type options" id="sender-types">
                                             <svg class="slds-button__icon" aria-hidden="true">
-                                                <!-- <use xlink:href="{!$Resource.symbols}#hide"></use> -->
+                                                <!-- uncomment and replace with line below for use in visualforce page <use xlink:href="{!$Resource.symbols}#hide"></use> -->
                                                 <use xlink:href="/assets/symbols.svg#down"></use>
                                             </svg>
                                             <span class="slds-assistive-text">Sender type options</span>
@@ -473,7 +483,7 @@
                                         </div>
                                     </div>
                                 </div>
-                                <input type="text" id="transcription-text-view" placeholder="Write a message..." aria-labelledby="fixed-text-label fixed-text-addon-pre fixed-text-addon-post" class="slds-input" />
+                                <input type="text" id="transcription-text-view" placeholder="Write a message..." aria-labelledby="fixed-text-label fixed-text-addon-pre fixed-text-addon-post" class="slds-input"></input>
                                 <button class="slds-button slds-button_outline-brand slds-button_stretch" id="send-transcription">Add to Transcript</button>
                             </div>
                         </div>
@@ -481,7 +491,7 @@
                             <div class="slds-form-element__control slds-input-has-fixed-addon">
                                 <button id="record-button" type="button" class="btn btn-danger">
                                     <svg class="slds-button__icon" aria-hidden="true">
-                                        <!-- <use xlink:href="{!$Resource.symbols}#hide"></use> -->
+                                        <!-- uncomment and replace with line below for use in visualforce page <use xlink:href="{!$Resource.symbols}#hide"></use> -->
                                         <use xlink:href="/assets/symbols.svg#record"></use>
                                     </svg>
                                     <span class="slds-assistive-text">Record a message</span>
@@ -509,7 +519,7 @@
                                 Voice Call ID (Not Required for Inbound Calls)
                             </label>
                             <div class="slds-form-element__control">
-                                <input type="text" id="voice-id" placeholder="" maxlength="18" required="" class="slds-input" />
+                                <input type="text" id="voice-id" placeholder="" maxlength="18" required="" class="slds-input"></input>
                             </div>
                         </div>
                         <div class="slds-form-element slds-m-bottom_medium">
@@ -517,7 +527,7 @@
                                 Recording Length (Seconds)
                             </label>
                             <div class="slds-form-element__control">
-                                <input type="number" id="interaction-duration" placeholder="" required="" class="slds-input" />
+                                <input type="number" id="interaction-duration" placeholder="" required="" class="slds-input"></input>
                             </div>
                         </div>
                         <div class="slds-form-element slds-m-bottom_medium">
@@ -525,7 +535,7 @@
                                 On-Hold Time (Seconds)
                             </label>
                             <div class="slds-form-element__control">
-                                <input type="number" id="hold-duration" placeholder="" required="" class="slds-input" />
+                                <input type="number" id="hold-duration" placeholder="" required="" class="slds-input"></input>
                             </div>
                         </div>
                         <div class="slds-form-element slds-m-bottom_medium">
@@ -533,7 +543,7 @@
                                 Recording URL
                             </label>
                             <div class="slds-form-element__control">
-                                <input type="text" id="recording-link" required="" class="slds-input" />
+                                <input type="text" id="recording-link" required="" class="slds-input"></input>
                             </div>
                         </div>
                         <button class="slds-button slds-button_outline-brand" id="send-post-call-recording">Publish</button>
@@ -590,7 +600,7 @@
                         <div class="slds-form-element slds-m-bottom_medium">
                             <div class="slds-form-element__control">
                                 <div class="slds-checkbox slds-m-bottom_medium">
-                                    <input type="checkbox" name="options" id="showLoginPageCheckbox" />
+                                    <input type="checkbox" name="options" id="showLoginPageCheckbox"></input>
                                     <label class="slds-checkbox__label" for="showLoginPageCheckbox">
                                         <span class="slds-checkbox_faux"></span>
                                         <span class="slds-form-element__label"><b>Show telephony login screen</b></span>
@@ -624,7 +634,7 @@
                         <div class="slds-form-element slds-m-bottom_medium">
                             <div class="slds-form-element__control">
                                 <div class="slds-checkbox">
-                                    <input type="checkbox" name="options" id="throwErrorCheckbox" />
+                                    <input type="checkbox" name="options" id="throwErrorCheckbox"></input>
                                     <label class="slds-checkbox__label" for="throwErrorCheckbox">
                                     <span class="slds-checkbox_faux"></span>
                                     <span class="slds-form-element__label">Display an error</span>
@@ -688,8 +698,8 @@
                     </div>
                 </article>
             </div>
-            <!-- <script src="{!$Resource.remote_control}"></script> -->
+            <!-- uncomment and replace with line below for use in visualforce page <script src="{!$Resource.remote_control}"></script> -->
             <script src="/assets/remote.bundle.js"></script>
         </body>
     </html>
-    
+    <!-- uncomment for use in visualforce page</apex:page>  -->

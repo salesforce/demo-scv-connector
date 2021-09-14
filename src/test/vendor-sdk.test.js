@@ -213,7 +213,7 @@ describe('Vendor Sdk tests', () => {
             const contact = new Contact({ phoneNumber: '100'});
 
             const result = await connector.dial(contact);
-            expect(result.call.callType).toBe(Constants.CALL_TYPE.OUTBOUND);
+            expect(result.call.callType).toBe(Constants.CALL_TYPE.OUTBOUND.toLowerCase());
             expect(result.call.contact).toBe(contact);
             expect(result.call.callInfo.callStateTimestamp instanceof Date).toBeTruthy();
             expect(result.call.callAttributes.participantType).toBe(Constants.PARTICIPANT_TYPE.INITIAL_CALLER);
@@ -223,7 +223,7 @@ describe('Vendor Sdk tests', () => {
             const contact = new Contact({ phoneNumber: '100'});
 
             const result = await vendorSdk.dial(contact, { isSoftphoneCall: true });
-            expect(result.call.callType).toBe(Constants.CALL_TYPE.OUTBOUND);
+            expect(result.call.callType).toBe(Constants.CALL_TYPE.OUTBOUND.toLowerCase());
             expect(result.call.contact).toBe(contact);
             expect(result.call.callInfo.callStateTimestamp instanceof Date).toBeTruthy();
             expect(result.call.callAttributes.participantType).toBe(Constants.PARTICIPANT_TYPE.INITIAL_CALLER);
@@ -233,7 +233,7 @@ describe('Vendor Sdk tests', () => {
             const contact = new Contact({ phoneNumber: '100'});
 
             const result = await vendorSdk.dial(contact, { isSoftphoneCall: false });
-            expect(result.call.callType).toBe(Constants.CALL_TYPE.OUTBOUND);
+            expect(result.call.callType).toBe(Constants.CALL_TYPE.OUTBOUND.toLowerCase());
             expect(result.call.contact).toBe(contact);
             expect(result.call.callInfo.callStateTimestamp instanceof Date).toBeTruthy();
             expect(result.call.callAttributes.participantType).toBe(Constants.PARTICIPANT_TYPE.INITIAL_CALLER);

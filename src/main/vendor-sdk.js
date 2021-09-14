@@ -370,7 +370,7 @@ export class Sdk {
         let callAttributes = { participantType: Constants.PARTICIPANT_TYPE.INITIAL_CALLER };
         let contact = new Contact({ phoneNumber });
         let emitStartVoiceCall = (callId) => {
-            const call = new Call(Constants.CALL_TYPE.INBOUND, contact, callAttributes, new CallInfo(callInfo), callId);
+            const call = new Call(Constants.CALL_TYPE.INBOUND.toLowerCase(), contact, callAttributes, new CallInfo(callInfo), callId);
             this.addCall(call);
             const callResult = new CallResult({
                 call

@@ -343,7 +343,7 @@ export class Sdk {
         callInfo = callInfo || { isOnHold: false };
         callInfo.callStateTimestamp = new Date();
         const callAttributes = { participantType: Constants.PARTICIPANT_TYPE.INITIAL_CALLER };
-        const call = new Call(Constants.CALL_TYPE.OUTBOUND, contact, callAttributes, new CallInfo(callInfo));
+        const call = new Call(Constants.CALL_TYPE.OUTBOUND.toLowerCase(), contact, callAttributes, new CallInfo(callInfo));
         this.addCall(call);
         const callResult = new CallResult({
             call

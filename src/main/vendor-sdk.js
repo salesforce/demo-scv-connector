@@ -853,7 +853,7 @@ export class Sdk {
 
     /**
      * Simulate removing the participantType from the conversation
-     * @param {PARTICIPANT_TYPE} participantType need to be removed
+     * @param {string} participantType need to be removed
      */
     removeParticipant(participantType) {
         const call = this.getCall({callAttributes: { participantType: participantType }});

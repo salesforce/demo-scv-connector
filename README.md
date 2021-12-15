@@ -37,13 +37,13 @@ SSL certificate for local HTTPS development
 	- Edit the /etc/hosts file to point demo-connector.internal.salesforce.com or any alias you want to 127.0.0.1	
  		127.0.0.1 demo-connector.internal.salesforce.com
         - Generate key and cert using Openssl like below 
-		- mkdir certificates
-		- cd certificates
-		- openssl genrsa -des3 -passout pass:SomePassword -out server.pass.key 2048
-		- openssl rsa -passin pass:SomePassword -in server.pass.key -out server.key
-		- rm server.pass.key
-		- openssl req -new -key server.key -out server.csr
-		- openssl x509 -req -sha256 -days 365 -in server.csr -signkey server.key -out server.crt	
+		-- mkdir certificates
+		-- cd certificates
+		-- openssl genrsa -des3 -passout pass:SomePassword -out server.pass.key 2048
+		-- openssl rsa -passin pass:SomePassword -in server.pass.key -out server.key
+		-- rm server.pass.key
+		-- openssl req -new -key server.key -out server.csr
+		-- openssl x509 -req -sha256 -days 365 -in server.csr -signkey server.key -out server.crt	
         - Add generated cert.key(server.key) and cert.pem(server.crt) in demo-connector/ca/	
         - Go to demo-connector/ca folder and double click on the cert.pem file. This should open up the certificate in KeyChain
         - Double click on the demo-connector.internal.salesforce.com (http://demo-connector.internal.salesforce.com/) file in the KeyChain and set the 	

@@ -20,6 +20,9 @@ const signedRecordingDetails = document.getElementById('signed-recording-url-det
 const hasMergeCheckbox = document.getElementById('hasMergeCheckbox');
 const hasContactSearchCheckbox = document.getElementById('hasContactSearchCheckbox');
 const supportsMosCheckbox = document.getElementById('supportsMosCheckbox');
+const hasAgentAvailabilityCheckbox = document.getElementById('hasAgentAvailabilityCheckbox');
+const hasSupervisorListenInCheckbox = document.getElementById('hasSupervisorListenInCheckbox');
+const hasDebugLoggingCheckbox = document.getElementById('hasDebugLoggingCheckbox');
 const callIsRecordingPaused = document.getElementById('callIsRecordingPaused');
 const callIsOnHold = document.getElementById('callIsOnHold');
 const callIsMuted = document.getElementById('callIsMuted');
@@ -38,6 +41,7 @@ const startInboundCallButton = document.getElementById('new-inbound-call');
 const connectCallButton = document.getElementById('connect-call');
 const customerHangupButton = document.getElementById('customer-hangup');
 const connectParticipantButton = document.getElementById('connect-participant');
+const connectSupervisorButton = document.getElementById('connect-supervisor');
 const acceptCallButton = document.getElementById('accept-call');
 const declineCallButton = document.getElementById('decline-call');
 const agentEndCallButton = document.getElementById('agent-endcall');
@@ -48,6 +52,8 @@ const participantTypeDropdownButton = document.getElementById('participant-types
 const participantTypeDropdown = document.getElementById('participant-types-options');
 const addParticipantButton = document.getElementById('add-participant');
 const requestCallbackButton = document.getElementById('request-callback');
+const pushDialerButton = document.getElementById('push-dialer');
+const progressiveDialerButton = document.getElementById('progressive-dialer');
 const muteButton = document.getElementById('mute');
 const unmuteButton = document.getElementById('unmute');
 const holdButton = document.getElementById('hold');
@@ -57,6 +63,7 @@ const resumeRecButton = document.getElementById('resume-rec');
 const swapButton = document.getElementById('swap');
 const conferenceButton = document.getElementById('conference');
 const removeParticipantButton = document.getElementById('remove-participant');
+const removeSupervisorButton = document.getElementById('remove-supervisor');
 const softphoneLogoutButton = document.getElementById('softphone-logout');
 const transcriptionVendorCallKey = document.getElementById('transcription-vendor-call-key');
 const transcriptionCustomerPhoneNumber = document.getElementById('transcription-customer-phone-number');
@@ -86,15 +93,23 @@ const demoTitle = document.getElementById('demo-title');
 const errorSpan = document.getElementById('error-span');
 const sendAudioStatsButton = document.getElementById('send-audioStats-button');
 const sendAudioStatsTextArea = document.getElementById('send-audioStats-text');
-
+const statusDropdown = document.getElementById('status-dropdown');
 const hardphoneRadio = document.getElementById('hardphone');
 const softphoneRadio = document.getElementById('softphone');
+const allowRemovingPrimaryCallParticipantDropdown = document.getElementById('allow-removing-primary-call-participant');
+const allowRemovingTransferCallParticipantDropdown = document.getElementById('allow-removing-transfer-call-participant');
 
 const call = { callAttributes: { participantType: Constants.PARTICIPANT_TYPE.INITIAL_CALLER }};
 const thirdPartyCall = { callAttributes: { participantType: Constants.PARTICIPANT_TYPE.THIRD_PARTY }};
 signedRecordingDetails.style.display = "none";
 
-function getCallInfo() {
+function getRemovingParticipantSettings(callType) {
+    if (callType === Constants.CALL_TYPE.ADD_PARTICIPANT) {
+        return allowRemovingTransferCallParticipantDropdown.value;
+    } 
+    return allowRemovingPrimaryCallParticipantDropdown.value;
+}
+function getCallInfo(callType) {
     return {
         isSoftphoneCall: softphoneRadio.checked,
         isOnHold: callIsOnHold.checked,
@@ -108,7 +123,8 @@ function getCallInfo() {
         extensionEnabled: callHasExtensionToggle.checked,
         holdEnabled: callHasHold.checked,
         recordEnabled: callHasRecord.checked,
-        addCallerEnabled: callHasAddParticipant.checked
+        addCallerEnabled: callHasAddParticipant.checked,
+        removeParticipantVariant: getRemovingParticipantSettings(callType)
     }
 } 
 
@@ -147,6 +163,9 @@ requestBroadcastChannel.addEventListener('message', (event) => {
                 hasMergeCheckbox.checked = event.data.value.hasMerge;
                 hasContactSearchCheckbox.checked = event.data.value.hasContactSearch;
                 supportsMosCheckbox.checked = event.data.value.supportsMos;
+                hasAgentAvailabilityCheckbox.checked = event.data.value.hasAgentAvailability;
+                hasSupervisorListenInCheckbox.checked = event.data.value.hasSupervisorListenIn;
+                hasDebugLoggingCheckbox.checked = event.data.value.debugEnabled;
                 hasSignedRecordingUrlCheckbox.checked = event.data.value.hasSignedRecordingUrl;
                 signedRecordingUrl.value = event.data.value.signedRecordingUrl ? event.data.value.signedRecordingUrl : '';
                 signedRecordingDuration.value = event.data.value.signedRecordingDuration ? event.data.value.signedRecordingDuration : '';
@@ -159,6 +178,7 @@ requestBroadcastChannel.addEventListener('message', (event) => {
                 }
                 toggleHardphoneElements();
                 toggleSignedRecordingUrlElements();
+                populateStatusesDropdown(event.data.userPresenceStatuses);
             }
             break;
             case Constants.MESSAGE: {
@@ -177,6 +197,24 @@ requestBroadcastChannel.addEventListener('message', (event) => {
     }
 });
 
+function populateStatusesDropdown(userPresenceStatuses){
+    statusDropdown.length = 0;
+    let defaultOption = document.createElement('option');
+    defaultOption.text = 'Choose Presence';
+    defaultOption.value = '';
+    defaultOption.disabled = true;
+    statusDropdown.add(defaultOption);
+    statusDropdown.selectedIndex = 0;
+    const data = JSON.parse(userPresenceStatuses);
+    let option;
+    for (const [key, value] of Object.entries(data)) {
+        option = document.createElement('option');
+        option.text = value.statusName;
+        option.value = key;
+        statusDropdown.add(option);
+    }
+}
+
 function showError(error) {
     errorSpan.innerHTML = error ? `<span style="color:red;">&nbsp;&nbsp;&nbsp;${error}&nbsp;</span>` : "";
 }
@@ -187,7 +225,13 @@ function prettyPrintCalls(activeCalls) {
     activeCalls2TextArea.style.display = "none";
     activeCallHeader.style.display = "none";
     addParticipantButton.disabled = true;
+    connectSupervisorButton.style.display = "none";
+    removeSupervisorButton.style.display = "none";
     if (Array.isArray(activeCalls) && activeCalls.length > 0){
+        if (hasSupervisorListenInCheckbox.checked) {
+            connectSupervisorButton.style.display = "block";
+            removeSupervisorButton.style.display = "block";
+        }
         activeCallsCard.style.display = "block";
         activeCallHeader.style.display = "block";
         addParticipantButton.disabled = false;
@@ -197,7 +241,7 @@ function prettyPrintCalls(activeCalls) {
         activeCalls.forEach((call,index) => {
             const elem = index === 0 ? activeCalls1TextArea : activeCalls2TextArea;
             elem.style.display = "block";
-            elem.value = "";
+            elem.value = `Call ${call.state} to ${call.callAttributes.participantType}:\n`;
             Object.keys(call).forEach(key => {
                 elem.value += `${key}: ${JSON.stringify(call[key], null, 2)}\n`;
             })
@@ -231,6 +275,9 @@ hasRecordCheckbox.addEventListener('change', setAgentConfig);
 hasMergeCheckbox.addEventListener('change', setAgentConfig);
 hasContactSearchCheckbox.addEventListener('change', setAgentConfig);
 supportsMosCheckbox.addEventListener('change', setAgentConfig);
+hasAgentAvailabilityCheckbox.addEventListener('change', setAgentConfig);
+hasSupervisorListenInCheckbox.addEventListener('change', setAgentConfig);
+hasDebugLoggingCheckbox.addEventListener('change', setAgentConfig);
 hasSwapCheckbox.addEventListener('change', setAgentConfig);
 hasSignedRecordingUrlCheckbox.addEventListener('change', setAgentConfig);
 signedRecordingUrl.addEventListener('change', setAgentConfig);
@@ -258,9 +305,13 @@ sendPostCallRecordingButton.addEventListener('click', sendPostCallRecording);
 sendMessageButton.addEventListener('click', sendMessage);
 connectParticipantButton.addEventListener('click', connectParticipant);
 removeParticipantButton.addEventListener('click', removeParticipant);
+connectSupervisorButton.addEventListener('click', connectSupervisor);
+removeSupervisorButton.addEventListener('click', removeSupervisor);
 senderTypeButton.addEventListener('click', showSenderTypeOptions);
 addParticipantButton.addEventListener('click', addParticipant);
 requestCallbackButton.addEventListener('click', requestCallback);
+pushDialerButton.addEventListener('click', pushDialer);
+progressiveDialerButton.addEventListener('click', progressiveDialer);
 muteButton.addEventListener('click', mute);
 unmuteButton.addEventListener('click', unmute);
 holdButton.addEventListener('click', hold);
@@ -272,6 +323,7 @@ conferenceButton.addEventListener('click', conference);
 agentMissedCallButton.addEventListener('click', agentMissedCall);
 callErrorButton.addEventListener('click', callError);
 sendAudioStatsButton.addEventListener('click', sendAudioStats);
+statusDropdown.addEventListener('change', setAgentStatus);
 
 function showLoginChanged() {
     requestBroadcastChannel.postMessage({
@@ -300,7 +352,10 @@ function setAgentConfig() {
             hasMerge: hasMergeCheckbox.checked,
             hasContactSearch: hasContactSearchCheckbox.checked,
             supportsMos: supportsMosCheckbox.checked,
+            hasAgentAvailability: hasAgentAvailabilityCheckbox.checked,
             hasSignedRecordingUrl: hasSignedRecordingUrlCheckbox.checked,
+            hasSupervisorListenIn: hasSupervisorListenInCheckbox.checked,
+            debugEnabled: hasDebugLoggingCheckbox.checked,
             signedRecordingUrl: signedRecordingUrl.value,
             signedRecordingDuration: signedRecordingDuration.value,
             selectedPhone: hardphoneRadio.checked? {type: "DESK_PHONE", number:"101 101 10001"}: {type: "SOFT_PHONE"}}
@@ -312,13 +367,14 @@ function startOutboundCall() {
     requestBroadcastChannel.postMessage({
         type: Constants.START_OUTBOUND_CALL,
         phoneNumber,
-        callInfo: getCallInfo()
+        callInfo: getCallInfo(Constants.CALL_TYPE.OUTBOUND)
     });
 }
 
 function connectParticipant() {
     requestBroadcastChannel.postMessage({
-        type: Constants.CONNECT_PARTICIPANT
+        type: Constants.CONNECT_PARTICIPANT,
+        callInfo: getCallInfo(Constants.CALL_TYPE.ADD_PARTICIPANT)
     });
 }
 
@@ -329,9 +385,30 @@ function removeParticipant() {
     });
 }
 
+function connectSupervisor() {
+    requestBroadcastChannel.postMessage({
+        type: Constants.CONNECT_SUPERVISOR
+    });
+}
+
+function removeSupervisor() {
+    requestBroadcastChannel.postMessage({
+        type: Constants.REMOVE_SUPERVISOR
+    });
+}
+function setAgentStatus() {
+    if (statusDropdown.value) {
+        requestBroadcastChannel.postMessage({
+            type: Constants.SET_AGENT_STATUS,
+            statusId: statusDropdown.value
+        });
+    }
+}
+
 function connectCall() {
     requestBroadcastChannel.postMessage({
-        type: Constants.CONNECT_CALL
+        type: Constants.CONNECT_CALL,
+        callInfo: getCallInfo(Constants.CALL_TYPE.OUTBOUND)
     });
 }
 
@@ -345,7 +422,7 @@ function customerHangup() {
 function acceptCall() {
     requestBroadcastChannel.postMessage({
         type: Constants.CONNECT_CALL, 
-        callInfo: getCallInfo()
+        callInfo: getCallInfo(Constants.CALL_TYPE.INBOUND)
     });
 }
 
@@ -381,7 +458,7 @@ function startInboundCall() {
     requestBroadcastChannel.postMessage({
         type: Constants.START_INBOUND_CALL,
         phoneNumber,
-        callInfo: getCallInfo()
+        callInfo: getCallInfo(Constants.CALL_TYPE.INBOUND)
     });
 }
 
@@ -400,6 +477,23 @@ function requestCallback() {
     requestBroadcastChannel.postMessage({
         type: Constants.REQUEST_CALLBACK,
         payload: { phoneNumber }
+    });
+}
+
+function pushDialer() {
+    phoneNumber = phoneNumberInput.value;
+    requestBroadcastChannel.postMessage({
+        type: Constants.PUSH_DIALER,
+        payload: { phoneNumber }
+    });
+}
+
+function progressiveDialer() {
+    phoneNumber = phoneNumberInput.value;
+    requestBroadcastChannel.postMessage({
+        type: Constants.PROGRESSIVE_DIALER,
+        phoneNumber,
+        callInfo: getCallInfo(Constants.CALL_TYPE.OUTBOUND)
     });
 }
 

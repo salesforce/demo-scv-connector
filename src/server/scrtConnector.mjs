@@ -82,7 +82,8 @@ export const ScrtConnector = {
         const headers = {
             headers: {
                 'Authorization': `Bearer ${getToken()}`,
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'Telephony-Provider-Name': 'demo-connector'
             }
         };
         return getAxiosClient(tenantInfo).post('/voiceCalls', fieldValues, headers).then(response => {
@@ -97,7 +98,8 @@ export const ScrtConnector = {
         const headers = {
             headers: {
                 'Authorization': `Bearer ${getToken()}`,
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'Telephony-Provider-Name': 'demo-connector'
             }
         };
         let participantId = '';
@@ -133,7 +135,8 @@ export const ScrtConnector = {
         const headers = {
             headers: {
                 'Authorization': `Bearer ${getToken()}`,
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'Telephony-Provider-Name': 'demo-connector'
             }
         };
         return voiceCallId ?

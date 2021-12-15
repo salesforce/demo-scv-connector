@@ -45,13 +45,6 @@ gulp.task('bundle', gulp.series('lint', 'test', function() {
 
     var webpackConfig =  require('./webpack.config');
 
-    var mode = argv.mode;
-    if (mode === 'prod') {
-        webpackConfig.mode = 'production';
-    } else {
-        webpackConfig.devtool = false;
-    }
-
     return gulp.src(source)
         .pipe(webpackStream(webpackConfig))
         .pipe(gulp.dest('./dist/'));
@@ -60,8 +53,7 @@ gulp.task('bundle', gulp.series('lint', 'test', function() {
 gulp.task('default', gulp.series('bundle'));
 
 gulp.task('dist', shell.task([
-    'gulp bundle --mode dev',
-    'gulp bundle --mode prod',
+    'gulp bundle',
     'gulp fingerprinting'
 ]));
 

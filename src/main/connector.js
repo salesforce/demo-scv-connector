@@ -214,4 +214,14 @@ export class Connector extends VendorConnector {
     getSignedRecordingUrl(recordingUrl, vendorCallKey, callId) {
         return this.sdk.getSignedRecordingUrl(recordingUrl, vendorCallKey, callId);
     }
+
+    superviseCall(parentCall){
+        console.log("superviseCall", parentCall);
+        return this.sdk.superviseCall(parentCall);  
+    }
+
+    supervisorDisconnect(parentCall){
+        console.log("supervisorDisconnect", parentCall); 
+        return this.sdk.supervisorDisconnect(parentCall);
+    }
 }

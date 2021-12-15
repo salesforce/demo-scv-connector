@@ -27,11 +27,12 @@ export function initializeRemoteController(connector) {
                     }
                     break;
                     case Constants.GET_AGENT_CONFIG: {
-                        const { agentConfig } = connector.sdk.state;
+                        const { agentConfig, agentId, userPresenceStatuses } = connector.sdk.state;
                         requestBroadcastChannel.postMessage({
                             type: Constants.AGENT_CONFIG,
                             value: agentConfig,
-                            from: document.referrer
+                            userPresenceStatuses,
+                            from: `${document.referrer} as ${agentId}` 
                         })
                     }
                     break;
@@ -61,25 +62,40 @@ export function initializeRemoteController(connector) {
                             signedRecordingUrl: event.data.value.signedRecordingUrl,
                             signedRecordingDuration: event.data.value.signedRecordingDuration,
                             selectedPhone: event.data.value.selectedPhone,
-                            supportsMos: event.data.value.supportsMos
+                            supportsMos: event.data.value.supportsMos,
+                            hasSupervisorListenIn: event.data.value.hasSupervisorListenIn,
+                            debugEnabled: event.data.value.debugEnabled,
+                            hasAgentAvailability: event.data.value.hasAgentAvailability
                          });
                     }
                     break;
                     case Constants.START_OUTBOUND_CALL: {
-                        await connector.sdk.dial(new Contact({ phoneNumber: event.data.phoneNumber}), event.data.callInfo);
+                        await connector.sdk.dial(new Contact({ phoneNumber: event.data.phoneNumber}), event.data.callInfo, true);
                     }
                     break;
-                    case Constants.START_INBOUND_CALL: {
+                    case Constants.START_INBOUND_CALL:
+                    case Constants.PROGRESSIVE_DIALER:
                         await connector.sdk.startInboundCall(event.data.phoneNumber, event.data.callInfo);
-                    }
                     break;
                     case Constants.CONNECT_PARTICIPANT: {
-                        connector.sdk.connectParticipant();
+                        connector.sdk.connectParticipant(event.data.callInfo);
+                    }
+                    break;
+                    case Constants.SET_AGENT_STATUS: {
+                        connector.sdk.publishSetAgentStatus(event.data.statusId);
+                    }
+                    break;
+                    case Constants.CONNECT_SUPERVISOR: {
+                        connector.sdk.connectSupervisor();
                     }
                     break;
                     case Constants.REMOVE_PARTICIPANT:
                     case Constants.END_CALL: {
                         connector.sdk.removeParticipant(event.data.participantType);
+                    }
+                    break;
+                    case Constants.REMOVE_SUPERVISOR: {
+                        connector.sdk.removeSupervisor();
                     }
                     break;
                     case Constants.CONNECT_CALL: {
@@ -128,6 +144,10 @@ export function initializeRemoteController(connector) {
                     break;
                     case Constants.REQUEST_CALLBACK: {
                         connector.sdk.requestCallback(event.data.payload);
+                    }
+                    break;
+                    case Constants.PUSH_DIALER: {
+                        connector.sdk.previewCall(event.data.payload);
                     }
                     break;
                     case Constants.SEND_AUDIO_STATS: {

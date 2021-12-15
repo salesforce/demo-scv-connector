@@ -1,6 +1,8 @@
 require('custom-env').env();
 
 module.exports = {
+    mode: 'development',
+    devtool: 'source-map',
     entry: {
         main: './src/main/index.js',
         remote: './src/remote-control/main.js',
@@ -11,7 +13,11 @@ module.exports = {
         contentBase: __dirname + '/public',
         host: '0.0.0.0',
         proxy: {
-            '/api': process.env.SERVER_URL
+            '/api': process.env.SERVER_URL,
+            '/socket.io': {
+                target: process.env.SERVER_URL,
+                ws: true
+            },
         },
         disableHostCheck: true,
         index: '/app_debug.html',
@@ -28,7 +34,12 @@ module.exports = {
         rules: [
             {
                 test: /\.m?js$/,
-                exclude: /(node_modules)/,
+                exclude: [{
+                    test: __dirname + 'node_modules',
+                    // Exclude the following from the exclusion
+                    exclude: __dirname + 'node_modules/scv-connector-base'
+                }],
+                enforce: 'pre',
                 use: {
                     loader: 'babel-loader',
                     options: {

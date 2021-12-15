@@ -23,7 +23,7 @@
         </head>
     
         <body>
-            <div class="slds-box slds-theme_shade" style="max-width:720px;">
+            <div class="slds-box slds-theme_shade" style="max-width:780px;">
                 <div class="slds-page-header__name slds-m-bottom_medium">
                     <div class="slds-page-header__name-title">
                         <span class="slds-page-header__title slds-truncate" title="Remote controller">Phone Simulator</span>
@@ -43,6 +43,9 @@
                       </header>
                     </div>
                     <div class="slds-card__body slds-card__body_inner">
+                        <div class="slds-m-bottom_small">
+                            <select id="status-dropdown"></select>
+                        </div>
                         <div class="slds-form-element">
                             <div class="slds-form-element__control">
                                 <div class="slds-checkbox">
@@ -112,7 +115,40 @@
                         <div class="slds-form-element">
                             <div class="slds-form-element__control">
                                 <div class="slds-checkbox">
-                                    <input type="checkbox" name="options" id="hasSignedRecordingUrlCheckbox"></input>
+                                    <input type="checkbox" name="options" id="hasAgentAvailabilityCheckbox" checked="" />
+                                    <label class="slds-checkbox__label" for="hasAgentAvailabilityCheckbox">
+                                        <span class="slds-checkbox_faux"></span>
+                                        <span class="slds-form-element__label">Vendor supports Agent Availability</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="slds-form-element">
+                            <div class="slds-form-element__control">
+                                <div class="slds-checkbox">
+                                    <input type="checkbox" name="options" id="hasSupervisorListenInCheckbox" checked="" />
+                                    <label class="slds-checkbox__label" for="hasSupervisorListenInCheckbox">
+                                        <span class="slds-checkbox_faux"></span>
+                                        <span class="slds-form-element__label">Agent can listen in as supervisor</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="slds-form-element">
+                            <div class="slds-form-element__control">
+                                <div class="slds-checkbox">
+                                    <input type="checkbox" name="options" id="hasDebugLoggingCheckbox" checked="" />
+                                    <label class="slds-checkbox__label" for="hasDebugLoggingCheckbox">
+                                        <span class="slds-checkbox_faux"></span>
+                                        <span class="slds-form-element__label" title="When it is checked file logging is enabled, otherwise logs to console">Enable logging</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="slds-form-element">
+                            <div class="slds-form-element__control">
+                                <div class="slds-checkbox">
+                                    <input type="checkbox" name="options" id="hasSignedRecordingUrlCheckbox" />
                                     <label class="slds-checkbox__label" for="hasSignedRecordingUrlCheckbox">
                                         <span class="slds-checkbox_faux"></span>
                                         <span class="slds-form-element__label">User supports signed recording URL</span>
@@ -233,6 +269,18 @@
                                 </div>
                             </div>
                         </div>
+                        <div class="slds-form-element">
+                            <label class="slds-form-element__label" for="allow-removing-primary-call-participant">Allow Removing Primary Call Participant</label>
+                            <div class="slds-form-element__control">
+                                <div class="slds-select_container">
+                                    <select class="slds-select" id="allow-removing-primary-call-participant">
+                                        <option value="ALWAYS">Always</option>
+                                        <option value="NEVER">Never</option>
+                                        <option value="ALWAYS_EXCEPT_WHEN_ON_HOLD">Always except when on hold</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                     <div class="slds-col">
                         <div class="slds-form-element">
@@ -268,7 +316,19 @@
                                 </div>
                             </div>
                         </div>
+                        <div class="slds-form-element">
+                            <label class="slds-form-element__label" for="allow-removing-transfer-call-participant">Allow Removing Transfer Call Participant</label>
+                            <div class="slds-form-element__control">
+                                <div class="slds-select_container">
+                                    <select class="slds-select" id="allow-removing-transfer-call-participant">
+                                        <option value="ALWAYS">Always</option>
+                                        <option value="NEVER">Never</option>
+                                        <option value="ALWAYS_EXCEPT_WHEN_ON_HOLD">Always except when on hold</option>
+                                    </select>
+                                </div>
+                            </div>
                         </div>
+                    </div>
                     <div class="slds-col">
                         <div class="slds-form-element">
                             <div class="slds-form-element__control">
@@ -306,13 +366,17 @@
                         </div>
                     </div>
                     </div>
-                        <div class="slds-card__body slds-card__body_inner slds-form-element__control slds-input-has-fixed-addon slds-m-bottom_small">
-                            <input type="text" id="phoneNumber-input" placeholder="Enter a phone number..." aria-labelledby="fixed-text-label fixed-text-addon-pre fixed-text-addon-post" class="slds-input"></input>
-                            <button class="slds-button slds-button_outline-brand" id="new-inbound-call">Inbound&nbsp;Call</button>
-                            <button class="slds-button slds-button_outline-brand" id="start-outbound-call">Outbound&nbsp;Call</button>
-                            <button class="slds-button slds-button_outline-brand slds-button" id="add-participant">Add&nbsp;Participant</button>
-                            <button class="slds-button slds-button_outline-brand slds-button" id="request-callback">Callback</button>
-                        </div>
+                    <div class="slds-card__body slds-card__body_inner slds-form-element__control slds-input-has-fixed-addon slds-m-bottom_small">
+                        <input type="text" id="phoneNumber-input" placeholder="Enter a phone number..." aria-labelledby="fixed-text-label fixed-text-addon-pre fixed-text-addon-post" class="slds-input"></input>
+                    </div>
+                    <div class="slds-card__body slds-card__body_inner slds-form-element__control slds-input-has-fixed-addon slds-m-bottom_small">
+                        <button class="slds-button slds-button_outline-brand" id="new-inbound-call">Inbound&nbsp;Call</button>
+                        <button class="slds-button slds-button_outline-brand" id="start-outbound-call">Outbound&nbsp;Call</button>
+                        <button class="slds-button slds-button_outline-brand slds-button" id="add-participant">Add&nbsp;Participant</button>
+                        <button class="slds-button slds-button_outline-brand slds-button" id="request-callback">Callback</button>
+                        <button class="slds-button slds-button_outline-brand slds-button" id="push-dialer">Push Dialer</button>
+                        <button class="slds-button slds-button_outline-brand slds-button" id="progressive-dialer">Progressive Dialer</button>
+                    </div>
                     <div id="active-calls-card" class="slds-card__body slds-card__body_inner">
                         <header class="slds-media slds-m-bottom_x-small slds-media_center slds-has-flexi-truncate">
                         <div class="slds-media__body">
@@ -392,11 +456,15 @@
                         </div>
                         </header>
                         <div class="slds-form-element slds-m-bottom_medium">
-                            <div class="slds-form-element__control slds-input-has-fixed-addon">
+                            <div class="slds-form-element__control slds-input-has-fixed-addon slds-m-bottom_small">
                                 <button class="slds-button slds-button_outline-brand slds-button_stretch" id="connect-call">Customer&nbsp;Joins</button>
                                 <button class="slds-button slds-button_outline-brand slds-button_stretch" id="customer-hangup">Customer&nbsp;Leaves</button>
                                 <button class="slds-button slds-button_outline-brand slds-button_stretch" id="connect-participant">Third&nbsp;Party&nbsp;Joins</button>
                                 <button class="slds-button slds-button_outline-brand slds-button_stretch" id="remove-participant">Third&nbsp;Party&nbsp;Leaves</button>
+                            </div>
+                            <div class="slds-form-element__control slds-input-has-fixed-addon slds-m-bottom_small">
+                                <button class="slds-button slds-button_outline-brand" id="connect-supervisor">Supervisor&nbsp;Joins</button>
+                                <button class="slds-button slds-button_outline-brand" id="remove-supervisor">Supervisor&nbsp;Leaves</button>
                             </div>
                         </div>
 

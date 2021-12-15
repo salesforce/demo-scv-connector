@@ -19,11 +19,11 @@ $ npm install
 ```
 
 ### Config Setup 
-Open config.env and set following config value if needed.
+Open config.env and set following config values as per Org and Enviroment if needed.
 
 - OVERRIDE_VOICECALLID (Optional): If you want to bypass scrt2 to create a voiceCall, pass a voiceCallId, i.e. 0LQxx0000004CIiGAM
 	
-If you have generated your own private/public key pair then replace the private key at /src/server/private.key
+- PRIVATE_KEY: If you have generated your own private/public key pair then replace the private key at /src/server/private.key
 
 Open webpack.config.js and configure the local host web server URL.
 
@@ -33,8 +33,21 @@ SSL certificate for local HTTPS development
 
 - HTTPS is enabled by default in webpack.config.js, if you don't have a SSL certificate in your local server, you will see a warning page in browser with message "Your connection is not private", and you can choose to preceed to your web server URL.
 
-- To avoid the warning message from the browser, you can setup a self-signed SSL certificate for you local web server.
- 
+- To avoid the warning message from the browser, you can setup a self-signed SSL certificate for you local web server using following instructions 
+- Edit the /etc/hosts file to point demo-connector.internal.salesforce.com or any alias you want to 127.0.0.1	
+	127.0.0.1 demo-connector.internal.salesforce.com
+	- Generate key and cert using Openssl like below 
+		- mkdir certificates
+		- cd certificates
+		- openssl genrsa -des3 -passout pass:SomePassword -out server.pass.key 2048
+		- openssl rsa -passin pass:SomePassword -in server.pass.key -out server.key
+		- rm server.pass.key
+		- openssl req -new -key server.key -out server.csr
+		- openssl x509 -req -sha256 -days 365 -in server.csr -signkey server.key -out server.crt	
+	- Add generated cert.key(server.key) and cert.pem(server.crt) in demo-connector/ca/	
+	- Go to demo-connector/ca folder and double click on the cert.pem file. This should open up the certificate in KeyChain
+	- Double click on the demo-connector.internal.salesforce.com (http://demo-connector.internal.salesforce.com/) file in the KeyChain and set the 	
+	certificate to be trusted always
 ### Launch application 
  
 ```

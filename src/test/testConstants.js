@@ -16,5 +16,9 @@ export default {
     AGENT_STATUS: {agentStatus: 'Available'},
     CALL_CENTER_CONFIG: { config: 'sso_config' },
     CONTAINER_DIV_KEY: 'CONTAINER_DIV',
-    GENERIC_ERROR_KEY: 'GENERIC_ERROR'
+    GENERIC_ERROR_KEY: 'GENERIC_ERROR',
+    USER_MESSAGE : {
+        CALL_STARTED: "CALL_STARTED",
+        PARTICIPANT_CONNECTED: "PARTICIPANT_CONNECTED"
+    }
 };

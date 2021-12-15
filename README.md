@@ -19,11 +19,11 @@ $ npm install
 ```
 
 ### Config Setup 
-Open config.env and set following config value if needed.
+Open config.env and set following config values as per Org and Enviroment if needed.
 
 - OVERRIDE_VOICECALLID (Optional): If you want to bypass scrt2 to create a voiceCall, pass a voiceCallId, i.e. 0LQxx0000004CIiGAM
 	
-If you have generated your own private/public key pair then replace the private key at /src/server/private.key
+- PRIVATE_KEY: If you have generated your own private/public key pair then replace the private key at /src/server/private.key
 
 Open webpack.config.js and configure the local host web server URL.
 

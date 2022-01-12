@@ -44,8 +44,9 @@ SSL certificate for local HTTPS development
 		- openssl x509 -req -sha256 -days 365 -in server.csr -signkey server.key -out server.crt	
 	- Add generated cert.key(server.key) and cert.pem(server.crt) in demo-connector/ca/	
 	- Go to demo-connector/ca folder and double click on the cert.pem file. This should open up the certificate in KeyChain
-	- Double click on the demo-connector.internal.salesforce.com (http://demo-connector.internal.salesforce.com/) file in the KeyChain and set the 	
-	certificate to be trusted always
+	- Double click on the demo-connector certificate file in the KeyChain (on Mac) and set the 	
+	certificate to be always trusted (the instructions may be different on Windows or Linux)
+	
 ### Launch application 
  
 ```

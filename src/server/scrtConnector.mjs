@@ -93,8 +93,8 @@ export const ScrtConnector = {
         });
     },
     createTranscription(params) {
-        const startTime = Math.ceil(new Date().getTime() / 1000);
-        const endTime = Math.ceil(new Date().getTime() / 1000) + 25;
+        const startTime = Math.ceil(new Date().getTime());
+        const endTime = Math.ceil(new Date().getTime()) + 25000;
         const headers = {
             headers: {
                 'Authorization': `Bearer ${getToken()}`,

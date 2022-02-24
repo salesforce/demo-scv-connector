@@ -6,16 +6,57 @@
  */
 
 /*
- * Server JS containing  api calls
- * @author vtikoo
+ * JS Server serving api calls and socket signaling 
+ * @author vtikoo, dlouvton
  */
 import express from 'express';
 import customEnv from 'custom-env';
 import { ScrtConnector }  from './scrtConnector.mjs';
-
+import { Server } from 'socket.io';
 customEnv.env();
 const app = express();
 app.use(express.json());
+let onlineUsers = new Map(); // username -> socket.id 
+const server = app.listen(process.env.SERVER_PORT, () => {
+    console.log(`App listening to ${process.env.SERVER_PORT}. Press Ctrl+C to quit.`);
+});
+const io = new Server(server);
+io.on('connection', socket => {
+    socket.on('join', data => {
+        console.log('User joined: ' + data.username);
+        socket.join(data.username);
+    });
+
+    socket.on('disconnect', () => {
+        for (let [key, value] of onlineUsers.entries()) {
+            if (value === socket.id) {
+                console.log('User disconnected: ' + key);
+                onlineUsers.delete(key);
+            }
+        }
+        socket.broadcast.emit('onlineUsers', Array.from(onlineUsers.keys()));
+    });
+
+    socket.on('presence', data => {
+        if (data.isAvailable) {
+            onlineUsers.set(data.username, socket.id);
+        } else {
+            console.log('User went offline: ' + data.username);
+            onlineUsers.delete(data.username)
+        }
+        socket.broadcast.emit('onlineUsers', Array.from(onlineUsers.keys()));
+    });
+    
+    socket.on('message', data => {
+        console.log(`User message from ${data.fromUsername} to ${data.toUsername}:  ${data.messageType}`);
+        if (data.toUsername) {
+            io.sockets.to(data.toUsername).emit('message', data);
+        } else {
+            socket.broadcast.emit('message', data);
+        }
+        
+    });
+});
 
 app.get('/api/createVoiceCall', (req, res) => {
     console.log(`Trying to create voice call with query ${JSON.stringify(req.query)}`);
@@ -58,8 +99,4 @@ app.post('/api/configureTenantInfo', (req, res) => {
         console.log(`Exception configuring tenant info : \n ${JSON.stringify(exception)}`);
         res.send({ success: false });
     }
-});
-
-app.listen(process.env.SERVER_PORT, () => {
-    console.log(`App listening to ${process.env.SERVER_PORT}.Press Ctrl+C to quit.`);
 });

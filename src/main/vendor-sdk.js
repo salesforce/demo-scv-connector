@@ -330,7 +330,7 @@ export class Sdk {
                 this.startInboundCall(message.data.phoneNumber, message.data.callInfo);
                 break;
             case USER_MESSAGE.PARTICIPANT_CONNECTED:
-                this.connectParticipant();
+                this.connectParticipant(message.data.callInfo);
                 break;
             default:
                 this.log("Could not handle message "+message.messageType, message) 
@@ -586,7 +586,7 @@ export class Sdk {
         this.log("acceptCall", callToAccept);
         this.addCall(callToAccept);
         this.state.agentAvailable = false;
-        this.messageUser(null, USER_MESSAGE.PARTICIPANT_CONNECTED, callToAccept);
+        this.messageUser(null, USER_MESSAGE.PARTICIPANT_CONNECTED, { callInfo: callToAccept.callInfo });
         return this.executeAsync("acceptCall", new CallResult({ call: callToAccept }));
     }
 
@@ -816,7 +816,9 @@ export class Sdk {
         this.addCall(parentCall);
         this.addCall(newCall);
         if (this.state.onlineUsers.includes(contact.id)) {
-            this.messageUser(contact.id, USER_MESSAGE.CALL_STARTED, parentCall);
+            const callInfo = new CallInfo(parentCall.callInfo);
+            callInfo.isOnHold = false;
+            this.messageUser(contact.id, USER_MESSAGE.CALL_STARTED, { phoneNumber: parentCall.phoneNumber, callInfo });
         }
         return this.executeAsync("addParticipant", new ParticipantResult({
             phoneNumber: contact.phoneNumber,

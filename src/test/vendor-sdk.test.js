@@ -472,7 +472,7 @@ describe('Vendor Sdk tests', () => {
             expect(result.initialCallHasEnded).toBeFalsy();
             expect(result.callInfo).toEqual(new CallInfo({ isOnHold: false }));
             expect(result.callId).not.toBeNull();
-            expect(vendorSdk.messageUser).toBeCalledWith(contact.id, constants.USER_MESSAGE.CALL_STARTED, call);
+            expect(vendorSdk.messageUser).toBeCalledWith(contact.id, constants.USER_MESSAGE.CALL_STARTED, expect.anything());
         });
         it('Should throw error on adParticipant if there is already an active call', async () => {
             const startCallResult = await vendorSdk.startInboundCall(dummyPhoneNumber, dummyCallAttributes);

@@ -1,6 +1,6 @@
 {
   "name": "scv-demo-connector",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Service Cloud Voice Demo Connector",
   "private": false,
   "scripts": {
@@ -45,11 +45,11 @@
     "webpack-cli": "^3.3.10",
     "webpack-dev-server": "^3.10.1",
     "webpack-stream": "^5.2.1",
-    "yargs": "^4.7.1"
+    "yargs": "^17.3.1"
   },
   "dependencies": {
     "@babel/runtime": "^7.11.2",
-    "@salesforce/scv-connector-base": "^3.2.18",
+    "@salesforce/scv-connector-base": "^3.3.19",
     "axios": "^0.21.1",
     "custom-env": "^2.0.1",
     "express": "^4.17.1",

@@ -21,10 +21,14 @@ const hasMergeCheckbox = document.getElementById('hasMergeCheckbox');
 const hasContactSearchCheckbox = document.getElementById('hasContactSearchCheckbox');
 const supportsMosCheckbox = document.getElementById('supportsMosCheckbox');
 const hasAgentAvailabilityCheckbox = document.getElementById('hasAgentAvailabilityCheckbox');
+const hasBlindTransferCheckbox = document.getElementById('hasBlindTransferCheckbox');
+const hasTransferToOmniFlowCheckbox = document.getElementById('hasTransferToOmniFlowCheckbox');
 const hasSupervisorListenInCheckbox = document.getElementById('hasSupervisorListenInCheckbox');
+const hasSupervisorBargeInCheckbox = document.getElementById('hasSupervisorBargeInCheckbox');
 const hasDebugLoggingCheckbox = document.getElementById('hasDebugLoggingCheckbox');
 const callIsRecordingPaused = document.getElementById('callIsRecordingPaused');
 const callIsOnHold = document.getElementById('callIsOnHold');
+const callIsExternalTransfer = document.getElementById("callIsExternalTransfer");
 const callIsMuted = document.getElementById('callIsMuted');
 const callHasAccept = document.getElementById('callHasAccept');
 const callHasDecline = document.getElementById('callHasDecline');
@@ -75,6 +79,7 @@ const senderTypeDropdownButton = document.getElementById('sender-types-title');
 const senderTypeDropdown = document.getElementById('sender-types-options');
 const endUserDropdownButton = document.getElementById('endUserButton');
 const virtualAgentDropdownButton = document.getElementById('virtualAgentButton');
+const supervisorDropdownButton = document.getElementById('supervisorButton');
 const sendPostCallRecordingButton = document.getElementById('send-post-call-recording');
 const postCallRecordingUrl = document.getElementById('recording-link');
 const sendMessageButton = document.getElementById('send-message-button');
@@ -98,10 +103,26 @@ const hardphoneRadio = document.getElementById('hardphone');
 const softphoneRadio = document.getElementById('softphone');
 const allowRemovingPrimaryCallParticipantDropdown = document.getElementById('allow-removing-primary-call-participant');
 const allowRemovingTransferCallParticipantDropdown = document.getElementById('allow-removing-transfer-call-participant');
+const agentContactType = document.getElementById('agentContactType');
+const queueContactType = document.getElementById('queueContactType');
+const phoneBookContactType = document.getElementById('phoneBookContactType');
+const phoneNumberContactType = document.getElementById('phoneNumberContactType');
 
 const call = { callAttributes: { participantType: Constants.PARTICIPANT_TYPE.INITIAL_CALLER }};
 const thirdPartyCall = { callAttributes: { participantType: Constants.PARTICIPANT_TYPE.THIRD_PARTY }};
 signedRecordingDetails.style.display = "none";
+
+function setContactTypes() {
+    requestBroadcastChannel.postMessage({
+        type: Constants.SET_CONTACT_TYPES,
+        contactTypes: [
+            ... agentContactType.checked ? [Constants.CONTACT_TYPE.AGENT] : [],
+            ... queueContactType.checked ? [Constants.CONTACT_TYPE.QUEUE] : [],
+            ... phoneBookContactType.checked ? [Constants.CONTACT_TYPE.PHONEBOOK] : [],
+            ... phoneNumberContactType.checked ? [Constants.CONTACT_TYPE.PHONENUMBER] : []
+        ]
+    })
+}
 
 function getRemovingParticipantSettings(callType) {
     if (callType === Constants.CALL_TYPE.ADD_PARTICIPANT) {
@@ -124,9 +145,10 @@ function getCallInfo(callType) {
         holdEnabled: callHasHold.checked,
         recordEnabled: callHasRecord.checked,
         addCallerEnabled: callHasAddParticipant.checked,
+        isExternalTransfer: callIsExternalTransfer.checked,
         removeParticipantVariant: getRemovingParticipantSettings(callType)
     }
-} 
+}
 
 function toggleHardphoneElements() {
     [startOutboundCallButton, acceptCallButton, declineCallButton, callHasAccept, callHasDecline].forEach(elem => {
@@ -157,18 +179,6 @@ requestBroadcastChannel.addEventListener('message', (event) => {
             break;
             case Constants.AGENT_CONFIG: {
                 demoTitle.innerText = `Connected to ${event.data.from}`;
-                hasMuteCheckbox.checked = event.data.value.hasMute;
-                hasRecordCheckbox.checked = event.data.value.hasRecord;
-                hasSwapCheckbox.checked = event.data.value.hasSwap;
-                hasMergeCheckbox.checked = event.data.value.hasMerge;
-                hasContactSearchCheckbox.checked = event.data.value.hasContactSearch;
-                supportsMosCheckbox.checked = event.data.value.supportsMos;
-                hasAgentAvailabilityCheckbox.checked = event.data.value.hasAgentAvailability;
-                hasSupervisorListenInCheckbox.checked = event.data.value.hasSupervisorListenIn;
-                hasDebugLoggingCheckbox.checked = event.data.value.debugEnabled;
-                hasSignedRecordingUrlCheckbox.checked = event.data.value.hasSignedRecordingUrl;
-                signedRecordingUrl.value = event.data.value.signedRecordingUrl ? event.data.value.signedRecordingUrl : '';
-                signedRecordingDuration.value = event.data.value.signedRecordingDuration ? event.data.value.signedRecordingDuration : '';
                 if(event.data.value.selectedPhone.type  === 'DESK_PHONE') {
                     hardphoneRadio.checked = true;
                     softphoneRadio.checked = false;
@@ -177,8 +187,27 @@ requestBroadcastChannel.addEventListener('message', (event) => {
                     hardphoneRadio.checked = false;
                 }
                 toggleHardphoneElements();
-                toggleSignedRecordingUrlElements();
                 populateStatusesDropdown(event.data.userPresenceStatuses);
+            }
+            break;
+            case Constants.CAPABILITIES: {
+                demoTitle.innerText = `Connected to ${event.data.from}`;
+                hasMuteCheckbox.checked = event.data.value.hasMute;
+                hasRecordCheckbox.checked = event.data.value.hasRecord;
+                hasSwapCheckbox.checked = event.data.value.hasSwap;
+                hasMergeCheckbox.checked = event.data.value.hasMerge;
+                hasContactSearchCheckbox.checked = event.data.value.hasContactSearch;
+                supportsMosCheckbox.checked = event.data.value.supportsMos;
+                hasAgentAvailabilityCheckbox.checked = event.data.value.hasAgentAvailability;
+                hasSupervisorListenInCheckbox.checked = event.data.value.hasSupervisorListenIn;
+                hasSupervisorBargeInCheckbox.checked = event.data.value.hasSupervisorBargeIn;
+                hasBlindTransferCheckbox.checked = event.data.value.hasBlindTransfer;
+                hasDebugLoggingCheckbox.checked = event.data.value.debugEnabled;
+                hasSignedRecordingUrlCheckbox.checked = event.data.value.hasSignedRecordingUrl;
+                hasTransferToOmniFlowCheckbox.checked = event.data.value.hasTransferToOmniFlow;
+                signedRecordingUrl.value = event.data.value.signedRecordingUrl ? event.data.value.signedRecordingUrl : '';
+                signedRecordingDuration.value = event.data.value.signedRecordingDuration ? event.data.value.signedRecordingDuration : '';
+                toggleSignedRecordingUrlElements();
             }
             break;
             case Constants.MESSAGE: {
@@ -264,24 +293,31 @@ requestBroadcastChannel.postMessage({
     type: Constants.GET_AGENT_CONFIG
 });
 
+requestBroadcastChannel.postMessage({
+    type: Constants.GET_CAPABILITIES
+});
+
 window.addEventListener('mouseup', function(){
     showError("");
     setTimeout(updateActiveCalls, 200);
 });
 showLoginPageCheckbox.addEventListener('change', showLoginChanged);
 throwErrorCheckbox.addEventListener('change', throwErrorChanged);
-hasMuteCheckbox.addEventListener('change', setAgentConfig);
-hasRecordCheckbox.addEventListener('change', setAgentConfig);
-hasMergeCheckbox.addEventListener('change', setAgentConfig);
-hasContactSearchCheckbox.addEventListener('change', setAgentConfig);
-supportsMosCheckbox.addEventListener('change', setAgentConfig);
-hasAgentAvailabilityCheckbox.addEventListener('change', setAgentConfig);
-hasSupervisorListenInCheckbox.addEventListener('change', setAgentConfig);
-hasDebugLoggingCheckbox.addEventListener('change', setAgentConfig);
-hasSwapCheckbox.addEventListener('change', setAgentConfig);
-hasSignedRecordingUrlCheckbox.addEventListener('change', setAgentConfig);
-signedRecordingUrl.addEventListener('change', setAgentConfig);
-signedRecordingDuration.addEventListener('change', setAgentConfig);
+hasMuteCheckbox.addEventListener('change', setCapabilities);
+hasRecordCheckbox.addEventListener('change', setCapabilities);
+hasMergeCheckbox.addEventListener('change', setCapabilities);
+hasTransferToOmniFlowCheckbox.addEventListener('change', setCapabilities);
+hasContactSearchCheckbox.addEventListener('change', setCapabilities);
+supportsMosCheckbox.addEventListener('change', setCapabilities);
+hasAgentAvailabilityCheckbox.addEventListener('change', setCapabilities);
+hasSupervisorListenInCheckbox.addEventListener('change', setCapabilities);
+hasSupervisorBargeInCheckbox.addEventListener('change', setCapabilities);
+hasDebugLoggingCheckbox.addEventListener('change', setCapabilities);
+hasBlindTransferCheckbox.addEventListener('change', setCapabilities);
+hasSwapCheckbox.addEventListener('change', setCapabilities);
+hasSignedRecordingUrlCheckbox.addEventListener('change', setCapabilities);
+signedRecordingUrl.addEventListener('change', setCapabilities);
+signedRecordingDuration.addEventListener('change', setCapabilities);
 hardphoneRadio.addEventListener('change', setAgentConfig);
 softphoneRadio.addEventListener('change', setAgentConfig);
 startOutboundCallButton.addEventListener('click', startOutboundCall);
@@ -298,6 +334,7 @@ participantTypeButton.addEventListener('click', showParticipantTypeOptions);
 softphoneLogoutButton.addEventListener('click', softphoneLogout);
 recordButton.addEventListener('click', recordClicked);
 endUserDropdownButton.addEventListener('click', endUserClicked);
+supervisorDropdownButton.addEventListener('click', supervisorClicked);
 virtualAgentDropdownButton.addEventListener('click', virtualAgentClicked);
 transcriptionTextArea.addEventListener('input', onTranscriptionChanged);
 sendTranscriptionButton.addEventListener('click', sendTranscription);
@@ -324,6 +361,11 @@ agentMissedCallButton.addEventListener('click', agentMissedCall);
 callErrorButton.addEventListener('click', callError);
 sendAudioStatsButton.addEventListener('click', sendAudioStats);
 statusDropdown.addEventListener('change', setAgentStatus);
+allowRemovingTransferCallParticipantDropdown.addEventListener('change', setRemoveTransferParticipantVariant);
+agentContactType.addEventListener('change', setContactTypes);
+queueContactType.addEventListener('change', setContactTypes);
+phoneBookContactType.addEventListener('change', setContactTypes);
+phoneNumberContactType.addEventListener('change', setContactTypes);
 
 function showLoginChanged() {
     requestBroadcastChannel.postMessage({
@@ -341,10 +383,18 @@ function throwErrorChanged() {
 
 function setAgentConfig() {
     toggleHardphoneElements();
-    toggleSignedRecordingUrlElements();
     startOutboundCallButton.disabled = !hardphoneRadio.checked;
     requestBroadcastChannel.postMessage({
         type: Constants.SET_AGENT_CONFIG,
+        value: {
+            selectedPhone: hardphoneRadio.checked? {type: "DESK_PHONE", number:"101 101 10001"}: {type: "SOFT_PHONE"}}
+    });
+}
+
+function setCapabilities() {
+    toggleSignedRecordingUrlElements();
+    requestBroadcastChannel.postMessage({
+        type: Constants.SET_CAPABILITIES,
         value: {
             hasMute: hasMuteCheckbox.checked,
             hasRecord: hasRecordCheckbox.checked,
@@ -355,10 +405,12 @@ function setAgentConfig() {
             hasAgentAvailability: hasAgentAvailabilityCheckbox.checked,
             hasSignedRecordingUrl: hasSignedRecordingUrlCheckbox.checked,
             hasSupervisorListenIn: hasSupervisorListenInCheckbox.checked,
+            hasBlindTransfer: hasBlindTransferCheckbox.checked,
+            hasSupervisorBargeIn: hasSupervisorBargeInCheckbox.checked,
             debugEnabled: hasDebugLoggingCheckbox.checked,
             signedRecordingUrl: signedRecordingUrl.value,
             signedRecordingDuration: signedRecordingDuration.value,
-            selectedPhone: hardphoneRadio.checked? {type: "DESK_PHONE", number:"101 101 10001"}: {type: "SOFT_PHONE"}}
+            hasTransferToOmniFlow: hasTransferToOmniFlowCheckbox.checked}
     });
 }
 
@@ -403,6 +455,13 @@ function setAgentStatus() {
             statusId: statusDropdown.value
         });
     }
+}
+
+function setRemoveTransferParticipantVariant() {
+    requestBroadcastChannel.postMessage({
+        type: Constants.REMOVE_PARTICIPANT_VARIANT,
+        variant: allowRemovingTransferCallParticipantDropdown.value
+    });
 }
 
 function connectCall() {
@@ -468,7 +527,7 @@ function addParticipant() {
     requestBroadcastChannel.postMessage({
         type: Constants.HARDPHONE_EVENT,
         eventType: Constants.EVENT_TYPE.PARTICIPANT_ADDED,
-        payload: { call , contact }
+        payload: { call: {...call, callInfo: getCallInfo()} , contact }
     });
 }
 
@@ -612,6 +671,12 @@ function showSenderTypeOptions() {
 function endUserClicked() {
     senderType = Constants.SENDER_TYPE.END_USER;
     senderTypeDropdownButton.innerText = 'Customer';
+    senderTypeDropdown.classList.toggle('slds-is-open');
+}
+
+function supervisorClicked() {
+    senderType = Constants.SENDER_TYPE.SUPERVISOR;
+    senderTypeDropdownButton.innerText = 'Supervisor';
     senderTypeDropdown.classList.toggle('slds-is-open');
 }
 

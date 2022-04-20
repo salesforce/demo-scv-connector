@@ -100,3 +100,14 @@ app.post('/api/configureTenantInfo', (req, res) => {
         res.send({ success: false });
     }
 });
+
+app.post('/api/executeOmniFlow', (req, res) => {
+    ScrtConnector.executeOmniFlow(req.body).then(result => {
+        console.log(`Omni Flow executed successfully : ${JSON.stringify(result.data)}`);
+        res.send(result.data);
+    }).catch((err) => {
+        console.log(`Failed to execute Omni Flow : \n ${JSON.stringify(err)}`);
+        res.send({});
+    });
+});
+

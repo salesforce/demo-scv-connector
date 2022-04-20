@@ -155,8 +155,8 @@ export class Connector extends VendorConnector {
      * @param {Contact} contact
      * @param {PhoneCall} call
      */
-    addParticipant(contact, call) {
-        return this.sdk.addParticipant(contact, call);
+    addParticipant(contact, call, isBlindTransfer) {
+        return this.sdk.addParticipant(contact, call, isBlindTransfer);
     }
     /**
      * logout from the telephony system.
@@ -185,6 +185,20 @@ export class Connector extends VendorConnector {
     */
     setAgentConfig(config) {
         return this.sdk.setAgentConfig(config);
+    }
+
+    /**
+     * Called when connector is ready to get the vendor or agent capabilities
+     */
+    getCapabilities() {
+        return this.sdk.getCapabilities();
+    }
+    
+    /**
+    * Used to set the vendor or agent capabilities
+    */
+    setCapabilities(capabilities) {
+        return this.sdk.setCapabilities(capabilities);
     }
 
     /**
@@ -223,5 +237,10 @@ export class Connector extends VendorConnector {
     supervisorDisconnect(parentCall){
         console.log("supervisorDisconnect", parentCall); 
         return this.sdk.supervisorDisconnect(parentCall);
+    }
+
+    supervisorBargeIn(parentCall){
+        console.log("supervisorBargeIn", parentCall); 
+        return this.sdk.supervisorBargeIn(parentCall);
     }
 }

@@ -14,11 +14,11 @@
  */
 
  /** @module vendor-sdk **/
- import { publishEvent, log, ActiveCallsResult, AgentConfigResult, RecordingToggleResult, ParticipantResult, MuteToggleResult,
+ import { publishEvent, log, ActiveCallsResult, AgentConfigResult, CapabilitiesResult, RecordingToggleResult, ParticipantResult, MuteToggleResult,
     PhoneContactsResult, CallResult, HangupResult, HoldToggleResult, InitResult, GenericResult, SignedRecordingUrlResult,
-    LogoutResult, CallInfo, PhoneCall, PhoneCallAttributes, Contact, Constants, Phone, StatsInfo, AudioStats, AgentStatusInfo, AudioStatsElement, SuperviseCallResult, SupervisorHangupResult } from '@salesforce/scv-connector-base';
+    LogoutResult, CallInfo, PhoneCall, PhoneCallAttributes, Contact, Constants, Phone, StatsInfo, AudioStats, AgentStatusInfo, AudioStatsElement, SuperviseCallResult, SupervisorHangupResult, SupervisedCallInfo } from '@salesforce/scv-connector-base';
 import { io } from "socket.io-client";
-import { USER_MESSAGE } from '../common/constants';
+import { USER_MESSAGE, FILTER_TYPES_TO_CONTACT_TYPES } from '../common/constants';
 
 /** 
  * Class representing a Phone Call
@@ -62,22 +62,28 @@ export class Sdk {
     constructor(state = { 
         isLoginRequired: true, 
         agentConfig: JSON.parse(localStorage.getItem('agentConfig')) || {
-            hasMerge: true,
+            phones : [ "SOFT_PHONE", "DESK_PHONE"],
+            selectedPhone : {type:"SOFT_PHONE"}
+        },
+        capabilities: JSON.parse(localStorage.getItem('capabilities')) || {
             hasMute: true,
             hasRecord: true,
+            hasMerge: true,
             hasSwap: true,
             hasSignedRecordingUrl: false,
+            debugEnabled: true,
             signedRecordingUrl: '',
             signedRecordingDuration: null,
             hasContactSearch: true,
             hasAgentAvailability: true,
+            supportsMos : true,
             hasSupervisorListenIn: false,
-            debugEnabled: true,
-            phones : [ "SOFT_PHONE", "DESK_PHONE"],
-            selectedPhone : {type:"SOFT_PHONE"},
-            supportsMos : true
+            hasSupervisorBargeIn: false,
+            hasBlindTransfer : false,
+            hasTransferToOmniFlow : true
         },
         agentId: null,
+        userFullName: null,
         activeCalls: this.getActiveCallsObj(),
         destroyedCalls: [],
         agentStatus: "Available",
@@ -86,7 +92,10 @@ export class Sdk {
         phoneContacts: this.getAllPhoneContacts(20),
         onlineUsers: [],
         userPresenceStatuses: null,
-        delayMs: 0 //Delay in milliseconds before resolving a promise
+        delayMs: 0, //Delay in milliseconds before resolving a promise
+        updateRemoveTransferCallParticipantVariant: Constants.REMOVE_PARTICIPANT_VARIANT.ALWAYS,
+        contactTypes: JSON.parse(localStorage.getItem('contactTypes')) || 
+            [ Constants.CONTACT_TYPE.AGENT, Constants.CONTACT_TYPE.QUEUE, Constants.CONTACT_TYPE.PHONEBOOK, Constants.CONTACT_TYPE.PHONENUMBER ]
     }){
         this.state = {...state, 
             showLoginPage: !!JSON.parse(localStorage.getItem('showLoginPage')),
@@ -142,10 +151,15 @@ export class Sdk {
         socket.emit("presence", { isAvailable, username });
     }
     /**
-     * Update the Main Call Info (with the initial caller)
+     * Update the Main Call Info (with the initial caller or supervisor)
      */
     updateInitialCallInfo(value) {
-        let call = this.getCall({ callAttributes: { participantType: Constants.PARTICIPANT_TYPE.INITIAL_CALLER }});
+        let call;
+        try {
+            call = this.getCall({ callAttributes: { participantType: Constants.PARTICIPANT_TYPE.INITIAL_CALLER }});
+        } catch(e) {
+            call = this.getCall({ callAttributes: { participantType: Constants.PARTICIPANT_TYPE.SUPERVISOR }});
+        }
         Object.assign(call.callInfo, value);
         this.addCall(call);
     }
@@ -171,20 +185,43 @@ export class Sdk {
     */
    updateAgentConfig(agentConfig) {
        this.state.agentConfig.selectedPhone = agentConfig.selectedPhone;
-       this.state.agentConfig.hasMute = agentConfig.hasMute;
-       this.state.agentConfig.hasRecord = agentConfig.hasRecord;
-       this.state.agentConfig.hasSwap = agentConfig.hasSwap;
-       this.state.agentConfig.hasMerge = agentConfig.hasMerge;
-       this.state.agentConfig.hasSignedRecordingUrl = agentConfig.hasSignedRecordingUrl;
-       this.state.agentConfig.signedRecordingUrl = agentConfig.signedRecordingUrl;
-       this.state.agentConfig.signedRecordingDuration = agentConfig.signedRecordingDuration;
-       this.state.agentConfig.hasContactSearch = agentConfig.hasContactSearch;
-       this.state.agentConfig.supportsMos = agentConfig.supportsMos;
-       this.state.agentConfig.hasAgentAvailability = agentConfig.hasAgentAvailability;
-       this.state.agentConfig.hasSupervisorListenIn = agentConfig.hasSupervisorListenIn;
-       this.state.agentConfig.debugEnabled = agentConfig.debugEnabled;
        localStorage.setItem('agentConfig', JSON.stringify(this.state.agentConfig));
     }
+
+    setCapabilities() {
+        localStorage.setItem('capabilities', JSON.stringify(this.state.capabilities));
+        return this.executeAsync("setCapabilities", new GenericResult({ success: true }));
+    }
+
+    /*
+    * Update Capabilities used only for Voice call simulator
+    */
+   updateCapabilities(capabilities) {
+    this.state.capabilities.hasSignedRecordingUrl = capabilities.hasSignedRecordingUrl;
+    this.state.capabilities.signedRecordingUrl = capabilities.signedRecordingUrl;
+    this.state.capabilities.signedRecordingDuration = capabilities.signedRecordingDuration;
+    this.state.capabilities.hasMute = capabilities.hasMute;
+    this.state.capabilities.hasRecord = capabilities.hasRecord;
+    this.state.capabilities.hasSwap = capabilities.hasSwap;
+    this.state.capabilities.hasMerge = capabilities.hasMerge;
+    this.state.capabilities.hasContactSearch = capabilities.hasContactSearch;
+    this.state.capabilities.supportsMos = capabilities.supportsMos;
+    this.state.capabilities.hasAgentAvailability = capabilities.hasAgentAvailability;
+    this.state.capabilities.hasSupervisorListenIn = capabilities.hasSupervisorListenIn;
+    this.state.capabilities.hasSupervisorBargeIn = capabilities.hasSupervisorBargeIn;
+    this.state.capabilities.hasBlindTransfer = capabilities.hasBlindTransfer;
+    this.state.capabilities.hasTransferToOmniFlow = capabilities.hasTransferToOmniFlow;
+    this.state.capabilities.debugEnabled = capabilities.debugEnabled;
+    localStorage.setItem('capabilities', JSON.stringify(this.state.capabilities));
+ }
+
+    /*
+    * Update contact types for add participant for voice call simulator
+    */
+   updateContactTypes(contactTypes) {
+       this.state.contactTypes = contactTypes;
+       localStorage.setItem('contactTypes', JSON.stringify(this.state.contactTypes));
+   }
 
     /*
     * This method is for demo purposes. Enables/disables throwing sdk errors for testing
@@ -208,7 +245,7 @@ export class Sdk {
      * log a message
      */
     log(...args) {
-        if(this.state.agentConfig.debugEnabled) {
+        if(this.state.capabilities.debugEnabled) {
             const message = args.map(arg => (typeof arg === 'string' ? arg : JSON.stringify(arg))).join(' ');
             log({ message }, Constants.LOG_LEVEL.INFO);
             return;
@@ -227,9 +264,11 @@ export class Sdk {
         if (filter.contains) {
             result = result.filter(obj => Object.keys(obj).some(key => obj[key] && obj[key].toLowerCase().includes(filter.contains.toLowerCase())));
         }
-        if (filter.type) {
-            result = result.filter(obj => Object.keys(obj).some(key => key === "type" && obj[key] === filter.type));
-        }
+        (filter.types || []).forEach(type => {
+            const value = FILTER_TYPES_TO_CONTACT_TYPES[type] || type;
+            const key = FILTER_TYPES_TO_CONTACT_TYPES[type] ? "type" : "availability";
+            result = result.filter(obj =>  obj[key] === value);
+        });
         const startIndex = filter.offset ? filter.offset : 0; 
         const endIndex = filter.limit ? startIndex + filter.limit : result.length;
         return result.slice(startIndex, endIndex);  
@@ -280,6 +319,7 @@ export class Sdk {
 
     init(callCenterConfig) {
         const username = this.state.agentId = callCenterConfig['userName'];
+        this.state.userFullName = callCenterConfig['userFullName'];
         this.state.userPresenceStatuses = callCenterConfig['userPresenceStatuses']
         const socket = io();
 
@@ -327,14 +367,30 @@ export class Sdk {
     handleSocketMessage(message) {
         switch(message.messageType){
             case USER_MESSAGE.CALL_STARTED:
-                this.startInboundCall(message.data.phoneNumber, message.data.callInfo);
+                this.startTransferCall(message);
                 break;
             case USER_MESSAGE.PARTICIPANT_CONNECTED:
                 this.connectParticipant(message.data.callInfo);
                 break;
+            case USER_MESSAGE.CALL_BARGED_IN:
+                this.publishCallBargedInEventToAgents(message.data);
+                break;
             default:
-                this.log("Could not handle message "+message.messageType, message) 
-        }   
+                this.log("Could not handle message "+message.messageType, message)
+        }
+    }
+
+    startTransferCall(message){
+        const call = new PhoneCall({
+            callType: "inbound",
+            phoneNumber: message.data.phoneNumber,
+            callId: message.data.callId,
+            callInfo: new CallInfo({isOnHold:false}),
+            callAttributes: new PhoneCallAttributes({participantType: Constants.PARTICIPANT_TYPE.INITIAL_CALLER, voiceCallId : message.data.voiceCallId })
+        });
+        this.addCall(call);
+        let callResult = new CallResult({call});
+        publishEvent({ eventType: Constants.EVENT_TYPE.CALL_STARTED, payload: callResult});
     }
 
     /**
@@ -361,7 +417,7 @@ export class Sdk {
      * @param {string} action
      * @param {object} payload
      * @param {number} delay Delay in milliseconds before resolving the promise
-     * @return {Promise} 
+     * @return {Promise}
      */
     executeAsync(action, payload) {
         this.log(`Executing action - ${action}`, payload);
@@ -371,44 +427,44 @@ export class Sdk {
         switch (action) {
             case "mute":
             case "unmute":
-                if (!this.state.agentConfig.hasMute) {
+                if (!this.state.capabilities.hasMute) {
                     return Promise.reject(new Error('Mute is not supported'));
                 }
             break;
             case "conference":
-                if (!this.state.agentConfig.hasMerge) {
+                if (!this.state.capabilities.hasMerge) {
                     return Promise.reject(new Error('Conference is not supported'));
                 }
             break;
             case "swapCalls":
-                if (!this.state.agentConfig.hasSwap) {
+                if (!this.state.capabilities.hasSwap) {
                     return Promise.reject(new Error('Swap Calls is not supported'));
                 }
             break;
             case "pauseRecording":
             case "resumeRecording":
-                if (!this.state.agentConfig.hasRecord) {
+                if (!this.state.capabilities.hasRecord) {
                     return Promise.reject(new Error('Recording is not supported'));
                 }
             break;
             case "getSignedRecordingUrl":
-                if (!this.state.agentConfig.hasSignedRecordingUrl || !this.state.agentConfig.signedRecordingUrl) {
+                if (!this.state.capabilities.hasSignedRecordingUrl || !this.state.capabilities.signedRecordingUrl) {
                     return Promise.reject(new Error('Signed recording url is not supported'));
                 }
             break;
         }
-        
+
         if (this.state.delayMs === 0) {
             return Promise.resolve(payload)
         }
 
-        return this.delay(this.state.delayMs).then(() => { 
+        return this.delay(this.state.delayMs).then(() => {
             return Promise.resolve(payload)
         });
     }
 
     delay(t, v) {
-        return new Promise(resolve => { 
+        return new Promise(resolve => {
             setTimeout(resolve.bind(null, v), t)
         });
     }
@@ -439,7 +495,7 @@ export class Sdk {
     /**
      * start a call
      * @param {string} phoneNumber - The phone number associcated with this contact
-     * @param {string} callInfo 
+     * @param {string} callInfo
      */
     startInboundCall(phoneNumber, callInfo) {
         callInfo = callInfo || { isOnHold: false };
@@ -451,36 +507,22 @@ export class Sdk {
         }
         let callAttributes = { participantType: Constants.PARTICIPANT_TYPE.INITIAL_CALLER };
         let contact = new Contact({ phoneNumber });
-        let emitStartVoiceCall = (callId) => {
-            const call = new Call(Constants.CALL_TYPE.INBOUND.toLowerCase(), contact, callAttributes, new CallInfo(callInfo), callId);
+        return this.createVoiceCall(undefined, Constants.CALL_TYPE.INBOUND, phoneNumber).then((data) => {
+            callAttributes.voiceCallId = data.voiceCallId;
+            const call = new Call(Constants.CALL_TYPE.INBOUND.toLowerCase(), contact, callAttributes, new CallInfo(callInfo), data.vendorCallKey);
             this.addCall(call);
             const callResult = new CallResult({
                 call
             });
             publishEvent({ eventType: Constants.EVENT_TYPE.CALL_STARTED, payload: callResult })
             return this.executeAsync('startInboundCall', callResult);
-        };
-        return fetch('/api/createVoiceCall?caller=' + phoneNumber + '&type=' + Constants.CALL_TYPE.INBOUND, {
-                headers: {
-                    'Strict-Transport-Security': 'max-age=31536000'
-                }
-            })
-            .then(response => response.json())
-            .then((data) => {
-                if (!data.voiceCallId){
-                  this.log("Could not contact Service Cloud Real Time. VoiceCall will be created by Salesforce Service Degradation Service.")
-                }
-                callAttributes.voiceCallId = data.voiceCallId;
-                return emitStartVoiceCall(data.vendorCallKey);
-            }).catch((err) => {
-                return Promise.reject(err);
-            });
+        });
     }
 
     getAllPhoneContacts(numOfContactsPerType) {
         let contacts = [];
         for (let i=1; i<=numOfContactsPerType; i++) {
-            contacts = contacts.concat(new Contact ({ 
+            contacts = contacts.concat(new Contact ({
                 id: 'id'+i,
                 type: Constants.CONTACT_TYPE.AGENT,
                 name : ["Agent Name "]+i,
@@ -488,7 +530,7 @@ export class Sdk {
             }))
         }
         for (let i=numOfContactsPerType+1; i<=numOfContactsPerType*2; i++) {
-            contacts = contacts.concat(new Contact ({ 
+            contacts = contacts.concat(new Contact ({
                 id: 'id'+i,
                 type: Constants.CONTACT_TYPE.QUEUE,
                 name : "Queue Name "+i,
@@ -496,7 +538,7 @@ export class Sdk {
             }))
         }
         for (let i=numOfContactsPerType*2+1; i<=numOfContactsPerType*3; i++) {
-            contacts = contacts.concat(new Contact ({ 
+            contacts = contacts.concat(new Contact ({
                 id: 'id'+i,
                 type: Constants.CONTACT_TYPE.PHONEBOOK,
                 name : "Phonebook Entry "+i,
@@ -504,7 +546,7 @@ export class Sdk {
             }))
         }
         for (let i=numOfContactsPerType*3+1; i<=numOfContactsPerType*4; i++) {
-            contacts = contacts.concat(new Contact ({ 
+            contacts = contacts.concat(new Contact ({
                 id: 'id'+i,
                 type: Constants.CONTACT_TYPE.PHONENUMBER,
                 name : "Phone Number "+i,
@@ -512,7 +554,7 @@ export class Sdk {
             }))
         }
         for (let i=numOfContactsPerType*4+1; i<=numOfContactsPerType*5; i++) {
-            contacts = contacts.concat(new Contact ({ 
+            contacts = contacts.concat(new Contact ({
                 endpointARN: 'arn'+i,
                 type: Constants.CONTACT_TYPE.PHONENUMBER,
                 name : ["ARN "]+i,
@@ -542,24 +584,35 @@ export class Sdk {
     }
 
     /**
-     * get agent  configs, for example if mute or recording is supported, phones supported for agent
+     * get agent configs, for example phones supported for agent and selected phone
      */
     getAgentConfig() {
         return this.executeAsync("getAgentConfig", new AgentConfigResult({
-            hasMute: this.state.agentConfig.hasMute,
-            hasMerge: this.state.agentConfig.hasMerge,
-            hasRecord: this.state.agentConfig.hasRecord,
-            hasSwap:  this.state.agentConfig.hasSwap,
-            hasSignedRecordingUrl: this.state.agentConfig.hasSignedRecordingUrl,
-            signedRecordingUrl: this.state.agentConfig.signedRecordingUrl,
-            signedRecordingDuration: this.state.agentConfig.signedRecordingDuration,
-            hasContactSearch: this.state.agentConfig.hasContactSearch,
-            supportsMos: this.state.agentConfig.supportsMos,
-            hasAgentAvailability: this.state.agentConfig.hasAgentAvailability,
-            hasSupervisorListenIn: this.state.agentConfig.hasSupervisorListenIn,
-            debugEnabled: this.state.agentConfig.debugEnabled,
             phones: this.state.agentConfig.phones,
             selectedPhone: new Phone (this.state.agentConfig.selectedPhone)
+        }));
+    }
+
+    /**
+     * get agent capabilities, for example if mute or recording is supported
+     */
+    getCapabilities() {
+        return this.executeAsync("getCapabilities", new CapabilitiesResult({
+            hasMute: this.state.capabilities.hasMute,
+            hasMerge: this.state.capabilities.hasMerge,
+            hasRecord: this.state.capabilities.hasRecord,
+            hasSwap:  this.state.capabilities.hasSwap,
+            hasSignedRecordingUrl: this.state.capabilities.hasSignedRecordingUrl,
+            hasContactSearch: this.state.capabilities.hasContactSearch,
+            supportsMos: this.state.capabilities.supportsMos,
+            hasAgentAvailability: this.state.capabilities.hasAgentAvailability,
+            hasSupervisorListenIn: this.state.capabilities.hasSupervisorListenIn,
+            hasSupervisorBargeIn: this.state.capabilities.hasSupervisorBargeIn,
+            debugEnabled: this.state.capabilities.debugEnabled,
+            hasBlindTransfer: this.state.capabilities.hasBlindTransfer,
+            hasTransferToOmniFlow: this.state.capabilities.hasTransferToOmniFlow,
+            signedRecordingUrl: '',
+            signedRecordingDuration: null
         }));
     }
 
@@ -577,17 +630,21 @@ export class Sdk {
      * @param {PhoneCall} call
      */
     acceptCall(call){
-        let callToAccept = this.getCall(call);
-        const state = callToAccept.callType.toLowerCase() === Constants.CALL_TYPE.CALLBACK.toLowerCase() &&
-            callToAccept.state !== Constants.CALL_STATE.CONNECTED ?
-            Constants.CALL_STATE.RINGING : Constants.CALL_STATE.CONNECTED;
-        callToAccept.state = state;
-        callToAccept.callAttributes.state = state;
-        this.log("acceptCall", callToAccept);
-        this.addCall(callToAccept);
-        this.state.agentAvailable = false;
-        this.messageUser(null, USER_MESSAGE.PARTICIPANT_CONNECTED, { callInfo: callToAccept.callInfo });
-        return this.executeAsync("acceptCall", new CallResult({ call: callToAccept }));
+        let callResult = null;
+        if (!this.state.throwError) {
+            let callToAccept = this.getCall(call);
+            const state = callToAccept.callType.toLowerCase() === Constants.CALL_TYPE.CALLBACK.toLowerCase() &&
+                callToAccept.state !== Constants.CALL_STATE.CONNECTED ?
+                Constants.CALL_STATE.RINGING : Constants.CALL_STATE.CONNECTED;
+            callToAccept.state = state;
+            callToAccept.callAttributes.state = state;
+            this.log("acceptCall", callToAccept);
+            this.addCall(callToAccept);
+            this.state.agentAvailable = false;
+            this.messageUser(null, USER_MESSAGE.PARTICIPANT_CONNECTED, { callInfo: callToAccept.callInfo });
+            callResult = new CallResult({ call: callToAccept });
+        }
+        return this.executeAsync("acceptCall", callResult);
     }
 
     /**
@@ -607,10 +664,13 @@ export class Sdk {
      */
     endCall(call, agentErrorStatus) {
         this.log("endCall", call, agentErrorStatus);
-        const destroyedCalls = this.destroyCalls(call, Constants.HANGUP_REASON.PHONE_CALL_ENDED);
-        this.state.agentAvailable = Object.keys(this.state.activeCalls).length === 0;
-        this.beginWrapup(destroyedCalls[0]);
-        return this.executeAsync("endCall", new HangupResult({ calls: destroyedCalls }));
+        let destroyedCalls = [];
+        if (!this.state.throwError) {
+            destroyedCalls = this.destroyCalls(call, Constants.HANGUP_REASON.PHONE_CALL_ENDED);
+            this.state.agentAvailable = Object.keys(this.state.activeCalls).length === 0;
+            this.beginWrapup(destroyedCalls[0]);
+        }
+        return this.executeAsync("endCall", new HangupResult({ calls: destroyedCalls }))
     }
     /**
      * Mute
@@ -630,12 +690,12 @@ export class Sdk {
     }
     /**
      * hold the call
-     * @param {PhoneCall} call 
+     * @param {PhoneCall} call
      */
     hold(call) {
         this.updateHoldState(call, true);
         return this.executeAsync("hold", new HoldToggleResult({
-            isThirdPartyOnHold: this.isOnHold({ callAttributes: { participantType: Constants.PARTICIPANT_TYPE.THIRD_PARTY }}), 
+            isThirdPartyOnHold: this.isOnHold({ callAttributes: { participantType: Constants.PARTICIPANT_TYPE.THIRD_PARTY }}),
             isCustomerOnHold: this.isOnHold({ callAttributes: { participantType: Constants.PARTICIPANT_TYPE.INITIAL_CALLER }}),
             calls: this.state.activeCalls
         }));
@@ -643,30 +703,30 @@ export class Sdk {
 
     /**
      * resume the call
-     * @param {PhoneCall} call 
+     * @param {PhoneCall} call
      */
     resume(call) {
         this.updateHoldState(call, false);
         return this.executeAsync("resume", new HoldToggleResult({
-            isThirdPartyOnHold: this.isOnHold({ callAttributes: { participantType: Constants.PARTICIPANT_TYPE.THIRD_PARTY }}), 
+            isThirdPartyOnHold: this.isOnHold({ callAttributes: { participantType: Constants.PARTICIPANT_TYPE.THIRD_PARTY }}),
             isCustomerOnHold: this.isOnHold({ callAttributes: { participantType: Constants.PARTICIPANT_TYPE.INITIAL_CALLER }}),
             calls: this.state.activeCalls
         }));
     }
     /**
      * pause recording for the call
-     * @param {PhoneCall} call 
+     * @param {PhoneCall} call
      */
-    pauseRecording(call) { 
+    pauseRecording(call) {
         const isRecordingPaused = true;
         this.updateInitialCallInfo({ isRecordingPaused });
         return this.executeAsync("pauseRecording", new RecordingToggleResult({ isRecordingPaused }));
     }
     /**
      * resume recording for the call
-     * @param {PhoneCall} call 
+     * @param {PhoneCall} call
      */
-    resumeRecording(call) { 
+    resumeRecording(call) {
         const isRecordingPaused = false;
         this.updateInitialCallInfo({ isRecordingPaused });
         return this.executeAsync("pauseRecording", new RecordingToggleResult({ isRecordingPaused }));
@@ -694,12 +754,25 @@ export class Sdk {
     * Disconnect from a Supervised call
     * @param {SupervisorHangupResult} SupervisorHangupResult
     */
-    supervisorDisconnect(parentCall) {
-        let calls; 
+    supervisorDisconnect(supervisedCall) {
+        let calls;
         if (!this.state.throwError) {
             calls = this.destroyCalls({callAttributes: { participantType: Constants.PARTICIPANT_TYPE.SUPERVISOR }});
         }
         return this.executeAsync("supervisorDisconnect", new SupervisorHangupResult({ calls }));
+    }
+
+    /**
+    * Barge in into a call as a supervisor
+    * @param {SuperviseCallResult} SuperviseCallResult
+    */
+    supervisorBargeIn(supervisedCall) {
+        const call = this.getCall({callAttributes: { participantType: Constants.PARTICIPANT_TYPE.SUPERVISOR }});
+        call.callAttributes.hasSupervisorBargedIn = supervisedCall.isBargedIn = true;
+        supervisedCall.supervisorName = this.state.userFullName;
+        this.addCall(call);
+        this.messageUser(null, USER_MESSAGE.CALL_BARGED_IN, supervisedCall);
+        return this.executeAsync("supervisorBargeIn", new SuperviseCallResult({ call }));
     }
 
     /**
@@ -709,7 +782,7 @@ export class Sdk {
      */
     isOnHold(call) {
         try {
-            return this.getCall(call).callAttributes.isOnHold;   
+            return this.getCall(call).callAttributes.isOnHold;
         } catch(e) {
             return undefined;
         }
@@ -735,14 +808,14 @@ export class Sdk {
         this.updateHoldState(call1, !activeCall1.callAttributes.isOnHold);
         this.updateHoldState(call2, !activeCall2.callAttributes.isOnHold);
         return this.executeAsync("swapCalls", new HoldToggleResult({
-            isThirdPartyOnHold: this.isOnHold(call1), 
+            isThirdPartyOnHold: this.isOnHold(call1),
             isCustomerOnHold: this.isOnHold(call2),
             calls: this.state.activeCalls
         }));
     }
     /**
      * join calls
-     * @param {PhoneCall[]} calls to be joined 
+     * @param {PhoneCall[]} calls to be joined
      */
     conference(calls) {
         calls.forEach((call) => {
@@ -750,7 +823,7 @@ export class Sdk {
         });
 
         return this.executeAsync("conference", new HoldToggleResult({
-            isThirdPartyOnHold: false, 
+            isThirdPartyOnHold: false,
             isCustomerOnHold: false
         }));
     }
@@ -768,19 +841,20 @@ export class Sdk {
     }
     /**
      * send digits to the active call
-     * @param {string} digits - digits to be sent (i.e. 123#) 
+     * @param {string} digits - digits to be sent (i.e. 123#)
      */
     sendDigits(digits) {
         return this.executeAsync("sendDigits");
     }
     /**
      * Get Agent Phone Book Contacts
+     * @param {object} filter object to filter contacts by
      */
     getPhoneContacts(filter) {
         let onlineContacts = [];
         this.state.onlineUsers.forEach((user) => {
             if (this.state.agentId !== user) {
-                onlineContacts = onlineContacts.concat(new Contact ({ 
+                onlineContacts = onlineContacts.concat(new Contact ({
                     id: user,
                     type: Constants.CONTACT_TYPE.AGENT,
                     name : user,
@@ -790,42 +864,102 @@ export class Sdk {
         })
         let contacts = this.filterContacts(onlineContacts.concat(this.state.phoneContacts), filter) ;
         return this.executeAsync("getPhoneContacts", new PhoneContactsResult({
-            contacts
+            contacts, contactTypes: this.state.contactTypes
         }));
     }
     /**
      * add participant to call through a new contact
-     * @param {Contact} contact - new contact 
+     * @param {Contact} contact - new contact
      * @param {PhoneCall} call - call to be transferred
+     * @param {boolean} isBlindTransfer - True if blind transfering a call and hanging up upon transfer
      */
-    addParticipant(contact, call) {
+    async addParticipant(contact, call, isBlindTransfer) {
         if (this.state.activeCalls && Object.keys(this.state.activeCalls).length > 1) {
             const message = `Agent is not available for a transfer call`;
             this.log(message);
             return Promise.reject(new Error(message));
         }
         const parentCall = this.getCall(call);
+        let isExternalTransfer;
+        if (call.callInfo && call.callInfo.isExternalTransfer !== undefined) {
+            isExternalTransfer = call.callInfo.isExternalTransfer;
+        } else if(contact) {
+            isExternalTransfer = !!contact.phoneNumber;
+        }
+
+        let transferCall = await this.createVoiceCall(call.callId, Constants.CALL_TYPE.TRANSFER, call.phoneNumber);
+        let transferTo = contact.id;
+        if(contact.type === Constants.CONTACT_TYPE.FLOW) {
+            let routingInstruction = await this.executeOmniFlow(transferCall, contact.id);
+            transferTo = routingInstruction.agent || routingInstruction.queue;
+        }
+        if (this.state.onlineUsers.includes(transferTo)) {
+            this.messageUser(transferTo, USER_MESSAGE.CALL_STARTED, {phoneNumber: parentCall.phoneNumber, callId:transferCall.vendorCallKey, voiceCallId: transferCall.voiceCallId});
+        }
+
+        if (isBlindTransfer) {
+            const destroyedCall = this.destroyCall(call, Constants.HANGUP_REASON.PHONE_CALL_ENDED);
+            this.log("addParticipant - cold transfer (destroyed call)", destroyedCall);
+            this.beginWrapup(destroyedCall);
+            return this.executeAsync("addParticipant", new ParticipantResult({
+                phoneNumber: contact.phoneNumber,
+                callInfo: new CallInfo({ isOnHold: false, isExternalTransfer }),
+                initialCallHasEnded: true,
+                callId: call.callId
+            }));
+        }
+
         parentCall.callAttributes.isOnHold = true; //FIXME: remove callAttributes.isOnHold in core, we don't need isOnHold in two places
         parentCall.callInfo.isOnHold = true;
         const parentVoiceCallId = parentCall.callAttributes.voiceCallId;
-        const newCall = new Call(Constants.CALL_TYPE.ADD_PARTICIPANT, contact, { participantType: Constants.PARTICIPANT_TYPE.THIRD_PARTY, voiceCallId: parentVoiceCallId }, new CallInfo({ isOnHold : false, callStateTimestamp: new Date() }));
+        const newCall = new Call(Constants.CALL_TYPE.ADD_PARTICIPANT, contact, { participantType: Constants.PARTICIPANT_TYPE.THIRD_PARTY, voiceCallId: parentVoiceCallId }, new CallInfo({ isOnHold : false, isExternalTransfer, callStateTimestamp: new Date() }));
         newCall.parentCallId = parentCall.callId;
         newCall.callAttributes.isOnHold = false; // same FIXME
         newCall.state = Constants.CALL_STATE.TRANSFERRING;
         this.log("addParticipant to parent voiceCall " + parentVoiceCallId, newCall);
         this.addCall(parentCall);
         this.addCall(newCall);
-        if (this.state.onlineUsers.includes(contact.id)) {
-            const callInfo = new CallInfo(parentCall.callInfo);
-            callInfo.isOnHold = false;
-            this.messageUser(contact.id, USER_MESSAGE.CALL_STARTED, { phoneNumber: parentCall.phoneNumber, callInfo });
-        }
+        const removeParticipantVariant = this.state.updateRemoveTransferCallParticipantVariant;
         return this.executeAsync("addParticipant", new ParticipantResult({
             phoneNumber: contact.phoneNumber,
-            callInfo: new CallInfo({ isOnHold: false }),
+            callInfo: new CallInfo({ isOnHold: false, isExternalTransfer, removeParticipantVariant }),
             initialCallHasEnded: parentCall.callAttributes && parentCall.callAttributes.initialCallHasEnded,
             callId: newCall.callId
         }));
+    }
+
+    executeOmniFlow(call, flowName) {
+        return  fetch('/api/executeOmniFlow', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({flowName:flowName, voiceCallId:call.vendorCallKey})
+        }).then(response => response.json()).then((payload) => {
+            return payload;
+        }).catch((err) => {
+            return Promise.reject(err);
+        });
+    }
+
+    /**
+     * Create a Voice call
+     */
+     createVoiceCall(parentCallId, callType, caller) {
+        let url = '/api/createVoiceCall?caller=' + caller + '&type=' +  callType  + (parentCallId ? '&parentCallId=' + parentCallId : '');
+        return  fetch(url, {
+            headers: {
+                'Strict-Transport-Security': 'max-age=31536000'
+            }
+        }).then(response => response.json())
+        .then((data) => {
+            if (!data.voiceCallId){
+                this.log("Could not contact Service Cloud Real Time. VoiceCall will be created by Salesforce Service Degradation Service.")
+            }
+            return data;
+        }).catch((err) => {
+            return Promise.reject(err);
+        });
     }
     /**
      * connect the last added participant
@@ -837,7 +971,7 @@ export class Sdk {
         this.addCall(call);
         publishEvent({eventType: Constants.EVENT_TYPE.PARTICIPANT_CONNECTED, payload: new ParticipantResult({
             phoneNumber: call.contact.phoneNumber,
-            callInfo: new CallInfo({ isOnHold: false , removeParticipantVariant: callInfo.removeParticipantVariant }),
+            callInfo: new CallInfo({ isOnHold: false , isExternalTransfer: callInfo.isExternalTransfer, removeParticipantVariant: callInfo.removeParticipantVariant }),
             initialCallHasEnded: call.callAttributes && call.callAttributes.initialCallHasEnded,
             callId: call.callId
         })});
@@ -855,7 +989,7 @@ export class Sdk {
 
     /**
      * Simulate removing the participantType from the conversation
-     * @param {string} participantType need to be removed
+     * @param {PARTICIPANT_TYPE} participantType need to be removed
      */
     removeParticipant(participantType) {
         const call = this.getCall({callAttributes: { participantType: participantType }});
@@ -947,9 +1081,9 @@ export class Sdk {
 
     getSignedRecordingUrl(recordingUrl, vendorCallKey, callId) {
         return this.executeAsync("getSignedRecordingUrl", new SignedRecordingUrlResult({
-            success: this.state.agentConfig.hasSignedRecordingUrl,
-            url: this.state.agentConfig.signedRecordingUrl,
-            duration: parseInt(this.state.agentConfig.signedRecordingDuration),
+            success: this.state.capabilities.hasSignedRecordingUrl,
+            url: this.state.capabilities.signedRecordingUrl,
+            duration: parseInt(this.state.capabilities.signedRecordingDuration),
             callId
         }));
     }
@@ -1007,7 +1141,19 @@ export class Sdk {
         publishEvent({ eventType: Constants.EVENT_TYPE.UPDATE_AUDIO_STATS, payload: payload });
     }
 
+    /**
+     * cache the value of remove participant variant for the third party transfer participant
+     * This allows disabling the remove participant button during the dialing phase of a transfer call. 
+     */
+    updateRemoveTransferCallParticipantVariant(variant) {
+        this.state.updateRemoveTransferCallParticipantVariant = variant;
+    }
+
     publishSetAgentStatus(statusId) {
         publishEvent({ eventType: "SET_AGENT_STATUS", payload: new AgentStatusInfo({statusId}) });
+    }
+
+    publishCallBargedInEventToAgents(parentCall) {
+        publishEvent({ eventType: "CALL_BARGED_IN", payload: new SupervisedCallInfo(parentCall)});
     }
 }

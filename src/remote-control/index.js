@@ -36,6 +36,15 @@ export function initializeRemoteController(connector) {
                         })
                     }
                     break;
+                    case Constants.GET_CAPABILITIES: {
+                        const { capabilities, agentId } = connector.sdk.state;
+                        requestBroadcastChannel.postMessage({
+                            type: Constants.CAPABILITIES,
+                            value: capabilities,
+                            from: `${document.referrer} as ${agentId}`
+                        })
+                    }
+                        break;
                     case Constants.GET_ACTIVE_CALLS: {
                         requestBroadcastChannel.postMessage({
                             type: Constants.ACTIVE_CALLS,
@@ -53,6 +62,12 @@ export function initializeRemoteController(connector) {
                     break;
                     case Constants.SET_AGENT_CONFIG: {
                         connector.sdk.updateAgentConfig({
+                            selectedPhone: event.data.value.selectedPhone
+                         });
+                    }
+                    break;
+                    case Constants.SET_CAPABILITIES: {
+                        connector.sdk.updateCapabilities({
                             hasMute: event.data.value.hasMute,
                             hasRecord: event.data.value.hasRecord,
                             hasSwap: event.data.value.hasSwap,
@@ -61,12 +76,18 @@ export function initializeRemoteController(connector) {
                             hasSignedRecordingUrl: event.data.value.hasSignedRecordingUrl,
                             signedRecordingUrl: event.data.value.signedRecordingUrl,
                             signedRecordingDuration: event.data.value.signedRecordingDuration,
-                            selectedPhone: event.data.value.selectedPhone,
                             supportsMos: event.data.value.supportsMos,
                             hasSupervisorListenIn: event.data.value.hasSupervisorListenIn,
+                            hasSupervisorBargeIn: event.data.value.hasSupervisorBargeIn,
+                            hasBlindTransfer: event.data.value.hasBlindTransfer,
                             debugEnabled: event.data.value.debugEnabled,
-                            hasAgentAvailability: event.data.value.hasAgentAvailability
+                            hasAgentAvailability: event.data.value.hasAgentAvailability,
+                            hasTransferToOmniFlow: event.data.value.hasTransferToOmniFlow
                          });
+                    }
+                    break;
+                    case Constants.SET_CONTACT_TYPES: {
+                        connector.sdk.updateContactTypes(event.data.contactTypes)
                     }
                     break;
                     case Constants.START_OUTBOUND_CALL: {
@@ -152,6 +173,10 @@ export function initializeRemoteController(connector) {
                     break;
                     case Constants.SEND_AUDIO_STATS: {
                         await connector.sdk.updateAudioStats(event.data.audioStats);
+                    }
+                    break;
+                    case Constants.REMOVE_TRANSFER_PARTICIPANT_VARIANT: {
+                        connector.sdk.updateRemoveTransferCallParticipantVariant(event.data.variant);
                     }
                     break;
                     case Constants.HARDPHONE_EVENT: {

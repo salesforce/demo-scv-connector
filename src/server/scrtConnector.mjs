@@ -28,7 +28,7 @@ const getScrtUrl = (info) => {
     return info.scrtBaseUrl + "/" + telephonyApiPostfix;
 };
 
-const getAxiosClient = (info) => { 
+const getAxiosClient = (info) => {
     return axios.create({ baseURL: getScrtUrl(info) });
 }
 
@@ -79,6 +79,9 @@ export const ScrtConnector = {
                 type: "END_USER"
             }]
         };
+        if(params.parentCallId) {
+            fieldValues.parentVoiceCallId = params.parentCallId;
+        }
         const headers = {
             headers: {
                 'Authorization': `Bearer ${getToken()}`,
@@ -89,6 +92,7 @@ export const ScrtConnector = {
         return getAxiosClient(tenantInfo).post('/voiceCalls', fieldValues, headers).then(response => {
             voiceCallId = response.data.voiceCallId;
             response.data.vendorCallKey = vendorCallKey;
+            console.log("Voice call created  is   : " + JSON.stringify(response.data));
             return response;
         });
     },
@@ -110,6 +114,7 @@ export const ScrtConnector = {
                 participantId = params.phoneNumber;
                 break;
             case 'VIRTUAL_AGENT':
+            case 'SUPERVISOR':
                 participantId = vendorCallKey;
                 break;
         }
@@ -142,5 +147,22 @@ export const ScrtConnector = {
         return voiceCallId ?
             getAxiosClient(tenantInfo).patch(`/voiceCalls/${voiceCallId}`, fieldValues, headers) :
             Promise.reject('No active call');
+    },
+
+    executeOmniFlow(params) {
+        const fieldValues = {
+            flowDevName : params.flowName
+        };
+        voiceCallId = params.voiceCallId ? params.voiceCallId : voiceCallId;
+        const headers = {
+            headers: {
+                'Authorization': `Bearer ${getToken()}`,
+                'Content-Type': 'application/json',
+                'Telephony-Provider-Name': 'demo-connector'
+            }
+        };
+        return voiceCallId ?
+            getAxiosClient(tenantInfo).patch(`/voiceCalls/${voiceCallId}/omniFlow`, fieldValues, headers):
+            Promise.reject('Execute Omni Flow Failed');
     }
 };

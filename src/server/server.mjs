@@ -80,7 +80,7 @@ app.post('/api/createTranscription', (req, res) => {
 });
 
 app.post('/api/updateVoiceCall', (req, res) => {
-    ScrtConnector.createVoiceCallRecording(req.body).then(response => {
+    ScrtConnector.updateVoiceCall(req.body).then(response => {
         console.log(`Successfully created a voice call recording - ${response.data}`);
         res.send({ success: true });
     }).catch(err => {
@@ -107,6 +107,16 @@ app.post('/api/executeOmniFlow', (req, res) => {
         res.send(result.data);
     }).catch((err) => {
         console.log(`Failed to execute Omni Flow : \n ${JSON.stringify(err)}`);
+        res.send({});
+    });
+});
+
+app.post('/api/sendVoiceMail', (req, res) => {
+    ScrtConnector.sendVoiceMail(req.body).then(result => {
+        console.log(`Voice Mail sent successfully`);
+        res.send(result.data);
+    }).catch((err) => {
+        console.log(`Failed to send Voice Mail : \n ${JSON.stringify(err)}`);
         res.send({});
     });
 });

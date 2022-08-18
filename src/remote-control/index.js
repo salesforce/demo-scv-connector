@@ -145,6 +145,20 @@ export function initializeRemoteController(connector) {
                         });
                     }
                     break;
+                    case Constants.SEND_VOICE_MAIL: {
+                        fetch('/api/sendVoiceMail', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify(event.data.voiceMailDetails)
+                        }).then((payload) => {
+                            connector.sdk.log(`Store recording link returned with ${payload.success}`);
+                        }).catch((err) => {
+                            connector.sdk.log(`Store recording link failed - ${err}`);
+                        });
+                    }
+                    break;
                     case Constants.SEND_RECORDING: {
                         fetch('/api/updateVoiceCall', {
                             method: 'POST',

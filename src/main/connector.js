@@ -125,8 +125,8 @@ export class Connector extends VendorConnector {
      * @param {string} agentStatus agent status, Constants.AGENT_STATUS.ONLINE or Constants.AGENT_STATUS.OFFLINE
      * @param {AgentStatusInfo} agentStatusInfo object contains statusId, statusApiName and statusName
      */
-    setAgentStatus(agentStatus, agentStatusInfo) {
-        return this.sdk.setAgentStatus(agentStatus, agentStatusInfo)
+    setAgentStatus(agentStatus, agentStatusInfo, enqueueNextState) {
+        return this.sdk.setAgentStatus(agentStatus, agentStatusInfo, enqueueNextState)
     }
     /**
      * Called when an outbound call is made 

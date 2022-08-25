@@ -712,6 +712,65 @@
                         <button class="slds-button slds-button_outline-brand" id="send-post-call-recording">Publish</button>
                     </div>
                 </article>
+
+                <article class="slds-card">
+                    <div class="slds-card__header slds-grid">
+                      <header class="slds-media slds-media_center slds-has-flexi-truncate">
+                        <div class="slds-media__body">
+                          <h2 class="slds-card__header-title">
+                            <a href="javascript:void(0);" class="slds-card__header-link slds-truncate" title="Accounts">
+                              <span>Voice Mail</span>
+                            </a>
+                          </h2>
+                        </div>
+                      </header>
+                    </div>
+                    <div class="slds-card__body slds-card__body_inner">Enter  Dialed phone number, Recording details, Transcripts and Caller number for dropping a  Voice Mail.
+                        Voice Mail will be routed by Omni as per routing instructions  configured for the dialed number in contact center details page</div>
+                    <div class="slds-card__body slds-card__body_inner">
+                        <div class="slds-form-element">
+                            <label class="slds-form-element__label" for="voicemail-dialedphone">
+                                Dialed Phone Number
+                            </label>
+                            <div class="slds-form-element__control">
+                                <input type="text" id="voicemail-dialedphone"   placeholder="Enter dialed phone number" required="" class="slds-input"></input>
+                            </div>
+                        </div>
+                        <div class="slds-form-element slds-m-bottom_medium">
+                            <label class="slds-form-element__label" for="voicemail-transcripts">
+                                Transcripts
+                            </label>
+                            <div class="slds-form-element__control slds-m-bottom_small">
+                                <textarea id="voicemail-transcripts" class="slds-textarea" placeholder="Enter transcripts for the voice mail"></textarea>
+                            </div>
+                        </div>
+                        <div class="slds-form-element slds-m-bottom_medium">
+                            <label class="slds-form-element__label" for="voicemail-recording">
+                                Recording URL
+                            </label>
+                            <div class="slds-form-element__control">
+                                <input type="text" id="voicemail-recording" required="" class="slds-input"></input>
+                            </div>
+                        </div>
+                        <div class="slds-form-element slds-m-bottom_medium">
+                            <label class="slds-form-element__label" for="interaction-duration">
+                                Recording Length (Seconds)
+                            </label>
+                            <div class="slds-form-element__control">
+                                <input type="number" id="voicemail-length" placeholder="" required="" class="slds-input"></input>
+                            </div>
+                        </div>
+                         <div class="slds-form-element slds-m-bottom_medium">
+                            <label class="slds-form-element__label" for="voicemail-dialedphone">
+                                Caller Number
+                            </label>
+                            <div class="slds-form-element__control">
+                                <input type="text" id="voicemail-caller"   placeholder="Enter Caller Number" required="" class="slds-input"></input>
+                            </div>
+                        </div>
+                        <button class="slds-button slds-button_outline-brand" id="send-voice-mail">Send Voice Mail</button>
+                    </div>
+                </article>
                 <article class="slds-card">
                     <div class="slds-card__header slds-grid">
                       <header class="slds-media slds-media_center slds-has-flexi-truncate">

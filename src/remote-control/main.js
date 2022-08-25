@@ -81,6 +81,7 @@ const endUserDropdownButton = document.getElementById('endUserButton');
 const virtualAgentDropdownButton = document.getElementById('virtualAgentButton');
 const supervisorDropdownButton = document.getElementById('supervisorButton');
 const sendPostCallRecordingButton = document.getElementById('send-post-call-recording');
+const sendVoiceMailButton = document.getElementById('send-voice-mail');
 const postCallRecordingUrl = document.getElementById('recording-link');
 const sendMessageButton = document.getElementById('send-message-button');
 const sendMessageTextArea = document.getElementById('send-message-text');
@@ -339,6 +340,7 @@ virtualAgentDropdownButton.addEventListener('click', virtualAgentClicked);
 transcriptionTextArea.addEventListener('input', onTranscriptionChanged);
 sendTranscriptionButton.addEventListener('click', sendTranscription);
 sendPostCallRecordingButton.addEventListener('click', sendPostCallRecording);
+sendVoiceMailButton.addEventListener('click', sendVoiceMail);
 sendMessageButton.addEventListener('click', sendMessage);
 connectParticipantButton.addEventListener('click', connectParticipant);
 removeParticipantButton.addEventListener('click', removeParticipant);
@@ -752,6 +754,26 @@ function sendPostCallRecording() {
          interactionDurationInput.value = '';
          holdDurationInput.value = '';
          voiceCallIdInput.value = '';
+    }
+}
+
+function sendVoiceMail(){
+    const dialedPhoneNumber = document.getElementById("voicemail-dialedphone").value;
+    const transcripts = document.getElementById("voicemail-transcripts").value;
+    const recordingUrl = document.getElementById("voicemail-recording").value;
+    const caller =  document.getElementById("voicemail-caller").value;
+    const recordingLength = document.getElementById("voicemail-length").value;
+    const voiceMailDetails = { dialedPhoneNumber, transcripts, recordingUrl, caller, recordingLength };
+    if(dialedPhoneNumber &&  transcripts && recordingUrl) {
+         requestBroadcastChannel.postMessage({
+                type: Constants.SEND_VOICE_MAIL,
+                voiceMailDetails
+         });
+         document.getElementById("voicemail-dialedphone").value = '';
+         document.getElementById("voicemail-transcripts").value = '';
+         document.getElementById("voicemail-recording").value = '';
+         document.getElementById("voicemail-caller").value = '';
+         document.getElementById("voicemail-length").value = '';
     }
 }
 

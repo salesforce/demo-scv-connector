@@ -71,7 +71,7 @@ export const ScrtConnector = {
             callCenterApiName: tenantInfo.callCenterName,
             initiationMethod: params.type === "inbound" ? "Inbound" : params.type,
             vendorCallKey,
-            to: process.env.CALL_CENTER_NO,
+            to: params.to ? params.to : process.env.CALL_CENTER_NO,
             from: params.caller,
             startTime: new Date().toISOString(),
             participants: [{
@@ -82,6 +82,9 @@ export const ScrtConnector = {
         if(params.parentCallId) {
             fieldValues.parentVoiceCallId = params.parentCallId;
         }
+        if(params.callOrigin) {
+            fieldValues.callOrigin = params.callOrigin;
+        }
         const headers = {
             headers: {
                 'Authorization': `Bearer ${getToken()}`,
@@ -89,10 +92,12 @@ export const ScrtConnector = {
                 'Telephony-Provider-Name': 'demo-connector'
             }
         };
+        console.log("Field Values for creating a Voice Call : " + JSON.stringify(fieldValues));
+        
         return getAxiosClient(tenantInfo).post('/voiceCalls', fieldValues, headers).then(response => {
             voiceCallId = response.data.voiceCallId;
             response.data.vendorCallKey = vendorCallKey;
-            console.log("Voice call created  is   : " + JSON.stringify(response.data));
+            console.log("Voice call created : " + JSON.stringify(response.data));
             return response;
         });
     },
@@ -126,16 +131,46 @@ export const ScrtConnector = {
             endTime,
             participantId
         };
+        console.log("Field Values for creating transcripts : " + JSON.stringify(fieldValues));
         return vendorCallKey && participantId ?
-            getAxiosClient(tenantInfo).post(`/voiceCalls/${vendorCallKey}/messages`, fieldValues, headers) :
-            Promise.reject('No active call');
+            getAxiosClient(tenantInfo).post(`/voiceCalls/${vendorCallKey}/messages`, fieldValues, headers).then((response) => {
+                console.log("Transcription added : " + JSON.stringify(response.data));
+                return response;
+            }) : Promise.reject('No active call');
     },
-    createVoiceCallRecording(params) {
-        const fieldValues = {
-            recordingLocation : params.recordingUrl,
-            agentInteractionDuration : params.agentInteractionDuration,
-            totalHoldDuration : params.totalHoldDuration
-        };
+
+    updateVoiceCall(params) {
+        const fieldValues = {};
+
+        if(params.recordingUrl) {
+            fieldValues.recordingLocation = params.recordingUrl;
+        }
+
+        if(params.agentInteractionDuration) {
+            fieldValues.agentInteractionDuration = params.agentInteractionDuration;
+            fieldValues.totalHoldDuration = params.totalHoldDuration;
+        }
+
+        if(params.totalRecordingDuration) {
+            fieldValues.totalRecordingDuration = params.totalRecordingDuration;
+        }
+        
+        if(params.callOrigin) {
+            fieldValues.callOrigin = params.callOrigin;
+        }
+
+        if(params.isActiveCall === true) {
+            fieldValues.isActiveCall = true;
+        }
+
+        if(params.endTime) {
+            fieldValues.endTime = params.endTime;
+        }
+
+        if(params.startTime) {
+            fieldValues.startTime = params.startTime;
+        }
+        
         voiceCallId = params.voiceCallId ? params.voiceCallId : voiceCallId;
         const headers = {
             headers: {
@@ -144,16 +179,31 @@ export const ScrtConnector = {
                 'Telephony-Provider-Name': 'demo-connector'
             }
         };
+        console.log("Field Values for updating Voice call : " + JSON.stringify(fieldValues));
         return voiceCallId ?
-            getAxiosClient(tenantInfo).patch(`/voiceCalls/${voiceCallId}`, fieldValues, headers) :
-            Promise.reject('No active call');
+            getAxiosClient(tenantInfo).patch(`/voiceCalls/${voiceCallId}`, fieldValues, headers).then((response) => {
+                console.log("Voice Call updated : " + JSON.stringify(response.data));
+                return response;
+            }) : Promise.reject('No active call');
     },
 
     executeOmniFlow(params) {
-        const fieldValues = {
-            flowDevName : params.flowName
-        };
+        const fieldValues = {};
+
+        if(params.fallbackQueue) {
+            fieldValues.fallbackQueue = params.fallbackQueue; 
+        }
+
+        if(params.flowName) {
+            fieldValues.flowName = params.flowName; 
+        }
+
         voiceCallId = params.voiceCallId ? params.voiceCallId : voiceCallId;
+
+        if(params.dialedNumber) {
+            fieldValues.dialedNumber = params.dialedNumber;
+        }
+
         const headers = {
             headers: {
                 'Authorization': `Bearer ${getToken()}`,
@@ -161,8 +211,65 @@ export const ScrtConnector = {
                 'Telephony-Provider-Name': 'demo-connector'
             }
         };
+        console.log("Field Values for executing  omni flow : " + JSON.stringify(fieldValues));
         return voiceCallId ?
-            getAxiosClient(tenantInfo).patch(`/voiceCalls/${voiceCallId}/omniFlow`, fieldValues, headers):
-            Promise.reject('Execute Omni Flow Failed');
+            getAxiosClient(tenantInfo).patch(`/voiceCalls/${voiceCallId}/omniFlow`, fieldValues, headers).then((response) => {
+                console.log("Omni Flow executed : " + JSON.stringify(response.data));
+                return response;
+            }) : Promise.reject('Execute Omni Flow Failed');
+    },
+
+    sendVoiceMail(params) {
+    
+        // For sending a voice mail Create a inbound Voice Call and saving vendorCallKey and voiceCallId
+        return this.createVoiceCall({type:"inbound", to: params.dialedPhoneNumber, caller: params.caller}).then(() => {
+
+            // Update Voice call with Call Origin as Voice Mail with isActiveCall as true as there are more updates ahead like transcription and recording
+            return this.updateVoiceCall({isActiveCall: true, callOrigin:'Voicemail', startTime: new Date().toISOString(), endTime : new Date(new Date().getTime() + 61000).toISOString()}).then(() => {
+                    
+                    // Add Transcripts in single sendMessage API call or with multiple calls for each utterance
+                    return this.createTranscription({phoneNumber: params.caller, content: params.transcripts, messageId: Math.random().toString(36).substring(10), senderType:'END_USER'}).then(() => {
+                        
+                        // Route the voice mail throuh omni by executing ExecuteOmniFlow api. Make sure voice mail  routing configuration is defined for dialed phone number in contact  enter details page
+                        return this.executeOmniFlow({dialedNumber: params.dialedPhoneNumber}).then(() => {
+                            
+                            // Finally update the Voice mail with  all remaining  details like recording details, duration etc. This will mark the conversation completed
+                            return this.updateVoiceCall({ recordingUrl: params.recordingUrl, totalRecordingDuration: parseInt(params.recordingLength) }).then((response) => {
+                                return Promise.resolve(response);
+                            });
+
+                        });
+
+                    });
+
+            });
+
+        }).catch((error) => {
+            return Promise.reject(error);
+        });
+    
+        /*
+    
+        // If you know beforehand that it is a Voice Mail then you can avoid an extra update call like below
+
+        return this.createVoiceCall({callOrigin:'Voicemail', type:"inbound", to: params.dialedPhoneNumber, caller: params.caller}).then(() => {
+                    
+            return this.createTranscription({phoneNumber: params.caller, content: params.transcripts, messageId: Math.random().toString(36).substring(10), senderType:'END_USER'}).then(() => {
+                
+                return this.executeOmniFlow({dialedNumber: params.dialedPhoneNumber}).then(() => {
+                    
+                    return this.updateVoiceCall({ recordingUrl: params.recordingUrl, totalRecordingDuration: parseInt(params.recordingLength) }).then((response) => {
+                        return Promise.resolve(response);
+                    });
+
+                });
+
+            });
+            
+        }).catch((error) => {
+            return Promise.reject(error);
+        });
+
+        */
     }
 };

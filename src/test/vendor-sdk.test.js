@@ -775,7 +775,7 @@ describe('Vendor Sdk tests', () => {
 
     describe('setAgentStatus', () => {
         it('Should return a valid generic result on setAgentStatus', async () => {
-            const result = await connector.setAgentStatus(Constants.AGENT_STATUS.ONLINE, new AgentStatusInfo({statusId: 'dummyStatusId', statusApiName: 'dummyStatusApiName', statusName: 'dummyStatusName'}));
+            const result = await connector.setAgentStatus(Constants.AGENT_STATUS.ONLINE, new AgentStatusInfo({statusId: 'dummyStatusId', statusApiName: 'dummyStatusApiName', statusName: 'dummyStatusName'}), true);
             expect(result.success).toBeTruthy();
         });
     });

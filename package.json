@@ -49,7 +49,7 @@
   },
   "dependencies": {
     "@babel/runtime": "^7.11.2",
-    "@salesforce/scv-connector-base": "^3.5.1",
+    "@salesforce/scv-connector-base": "^3.5.2",
     "axios": "^0.21.1",
     "custom-env": "^2.0.1",
     "express": "^4.17.1",

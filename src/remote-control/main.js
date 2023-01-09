@@ -21,6 +21,7 @@ const hasMergeCheckbox = document.getElementById('hasMergeCheckbox');
 const hasContactSearchCheckbox = document.getElementById('hasContactSearchCheckbox');
 const supportsMosCheckbox = document.getElementById('supportsMosCheckbox');
 const hasAgentAvailabilityCheckbox = document.getElementById('hasAgentAvailabilityCheckbox');
+const hasQueueWaitTimeCheckbox = document.getElementById('hasQueueWaitTimeCheckbox');
 const hasBlindTransferCheckbox = document.getElementById('hasBlindTransferCheckbox');
 const hasTransferToOmniFlowCheckbox = document.getElementById('hasTransferToOmniFlowCheckbox');
 const hasSupervisorListenInCheckbox = document.getElementById('hasSupervisorListenInCheckbox');
@@ -39,6 +40,10 @@ const callHasRecord = document.getElementById('callHasRecord');
 const callHasSwap = document.getElementById('callHasSwap');
 const callHasConference = document.getElementById('callHasConference');
 const callHasExtensionToggle = document.getElementById('callHasExtensionToggle');
+const showMuteButton = document.getElementById('showMuteButton');
+const showRecordButton = document.getElementById('showRecordButton');
+const showAddCallerButton = document.getElementById('showAddCallerButton');
+const showAddBlindTransferButton = document.getElementById('showAddBlindTransferButton');
 const phoneNumberInput = document.getElementById('phoneNumber-input');
 const startOutboundCallButton = document.getElementById('start-outbound-call');
 const startInboundCallButton = document.getElementById('new-inbound-call');
@@ -108,6 +113,8 @@ const agentContactType = document.getElementById('agentContactType');
 const queueContactType = document.getElementById('queueContactType');
 const phoneBookContactType = document.getElementById('phoneBookContactType');
 const phoneNumberContactType = document.getElementById('phoneNumberContactType');
+const showMergeButton = document.getElementById('showMergeButton');
+const showSwapButton = document.getElementById('showSwapButton');
 
 const call = { callAttributes: { participantType: Constants.PARTICIPANT_TYPE.INITIAL_CALLER }};
 const thirdPartyCall = { callAttributes: { participantType: Constants.PARTICIPANT_TYPE.THIRD_PARTY }};
@@ -147,7 +154,13 @@ function getCallInfo(callType) {
         recordEnabled: callHasRecord.checked,
         addCallerEnabled: callHasAddParticipant.checked,
         isExternalTransfer: callIsExternalTransfer.checked,
-        removeParticipantVariant: getRemovingParticipantSettings(callType)
+        showMuteButton: showMuteButton.checked,
+        showRecordButton: showRecordButton.checked,
+        showAddCallerButton: showAddCallerButton.checked,
+        showAddBlindTransferButton: showAddBlindTransferButton.checked,
+        removeParticipantVariant: getRemovingParticipantSettings(callType),
+        showMergeButton : showMergeButton.checked,
+        showSwapButton : showSwapButton.checked
     }
 }
 
@@ -200,6 +213,7 @@ requestBroadcastChannel.addEventListener('message', (event) => {
                 hasContactSearchCheckbox.checked = event.data.value.hasContactSearch;
                 supportsMosCheckbox.checked = event.data.value.supportsMos;
                 hasAgentAvailabilityCheckbox.checked = event.data.value.hasAgentAvailability;
+                hasQueueWaitTimeCheckbox.checked = event.data.value.hasQueueWaitTime;
                 hasSupervisorListenInCheckbox.checked = event.data.value.hasSupervisorListenIn;
                 hasSupervisorBargeInCheckbox.checked = event.data.value.hasSupervisorBargeIn;
                 hasBlindTransferCheckbox.checked = event.data.value.hasBlindTransfer;
@@ -311,6 +325,7 @@ hasTransferToOmniFlowCheckbox.addEventListener('change', setCapabilities);
 hasContactSearchCheckbox.addEventListener('change', setCapabilities);
 supportsMosCheckbox.addEventListener('change', setCapabilities);
 hasAgentAvailabilityCheckbox.addEventListener('change', setCapabilities);
+hasQueueWaitTimeCheckbox.addEventListener('change', setCapabilities);
 hasSupervisorListenInCheckbox.addEventListener('change', setCapabilities);
 hasSupervisorBargeInCheckbox.addEventListener('change', setCapabilities);
 hasDebugLoggingCheckbox.addEventListener('change', setCapabilities);
@@ -405,6 +420,7 @@ function setCapabilities() {
             hasContactSearch: hasContactSearchCheckbox.checked,
             supportsMos: supportsMosCheckbox.checked,
             hasAgentAvailability: hasAgentAvailabilityCheckbox.checked,
+            hasQueueWaitTime: hasQueueWaitTimeCheckbox.checked,
             hasSignedRecordingUrl: hasSignedRecordingUrlCheckbox.checked,
             hasSupervisorListenIn: hasSupervisorListenInCheckbox.checked,
             hasBlindTransfer: hasBlindTransferCheckbox.checked,

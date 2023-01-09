@@ -76,6 +76,7 @@ export class Sdk {
             signedRecordingDuration: null,
             hasContactSearch: true,
             hasAgentAvailability: true,
+            hasQueueWaitTime: false,
             supportsMos : true,
             hasSupervisorListenIn: false,
             hasSupervisorBargeIn: false,
@@ -207,6 +208,7 @@ export class Sdk {
     this.state.capabilities.hasContactSearch = capabilities.hasContactSearch;
     this.state.capabilities.supportsMos = capabilities.supportsMos;
     this.state.capabilities.hasAgentAvailability = capabilities.hasAgentAvailability;
+    this.state.capabilities.hasQueueWaitTime = capabilities.hasQueueWaitTime;
     this.state.capabilities.hasSupervisorListenIn = capabilities.hasSupervisorListenIn;
     this.state.capabilities.hasSupervisorBargeIn = capabilities.hasSupervisorBargeIn;
     this.state.capabilities.hasBlindTransfer = capabilities.hasBlindTransfer;
@@ -526,7 +528,8 @@ export class Sdk {
                 id: 'id'+i,
                 type: Constants.CONTACT_TYPE.AGENT,
                 name : ["Agent Name "]+i,
-                phoneNumber: "555555444"+i
+                phoneNumber: "555555444"+i,
+                availability: i%2 > 0 ? "AVAILABLE" : "BUSY"
             }))
         }
         for (let i=numOfContactsPerType+1; i<=numOfContactsPerType*2; i++) {
@@ -534,7 +537,8 @@ export class Sdk {
                 id: 'id'+i,
                 type: Constants.CONTACT_TYPE.QUEUE,
                 name : "Queue Name "+i,
-                queue: "Queue"+i
+                queue: "Queue"+i,
+                queueWaitTime: (Math.random() * 400).toString()
             }))
         }
         for (let i=numOfContactsPerType*2+1; i<=numOfContactsPerType*3; i++) {
@@ -606,6 +610,7 @@ export class Sdk {
             hasContactSearch: this.state.capabilities.hasContactSearch,
             supportsMos: this.state.capabilities.supportsMos,
             hasAgentAvailability: this.state.capabilities.hasAgentAvailability,
+            hasQueueWaitTime: this.state.capabilities.hasQueueWaitTime,
             hasSupervisorListenIn: this.state.capabilities.hasSupervisorListenIn,
             hasSupervisorBargeIn: this.state.capabilities.hasSupervisorBargeIn,
             debugEnabled: this.state.capabilities.debugEnabled,

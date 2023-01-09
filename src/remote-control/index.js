@@ -82,6 +82,7 @@ export function initializeRemoteController(connector) {
                             hasBlindTransfer: event.data.value.hasBlindTransfer,
                             debugEnabled: event.data.value.debugEnabled,
                             hasAgentAvailability: event.data.value.hasAgentAvailability,
+                            hasQueueWaitTime: event.data.value.hasQueueWaitTime,
                             hasTransferToOmniFlow: event.data.value.hasTransferToOmniFlow
                          });
                     }

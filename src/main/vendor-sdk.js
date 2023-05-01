@@ -16,7 +16,8 @@
  /** @module vendor-sdk **/
  import { publishEvent, log, ActiveCallsResult, AgentConfigResult, CapabilitiesResult, RecordingToggleResult, ParticipantResult, MuteToggleResult,
     PhoneContactsResult, CallResult, HangupResult, HoldToggleResult, InitResult, GenericResult, SignedRecordingUrlResult,
-    LogoutResult, CallInfo, PhoneCall, PhoneCallAttributes, Contact, Constants, Phone, StatsInfo, AudioStats, AgentStatusInfo, AudioStatsElement, SuperviseCallResult, SupervisorHangupResult, SupervisedCallInfo } from '@salesforce/scv-connector-base';
+    LogoutResult, CallInfo, PhoneCall, PhoneCallAttributes, Contact, Constants, Phone, StatsInfo, AudioStats, AgentStatusInfo, AudioStatsElement, 
+    SuperviseCallResult, SupervisorHangupResult, SupervisedCallInfo, CustomError } from '@salesforce/scv-connector-base';
 import { io } from "socket.io-client";
 import { USER_MESSAGE, FILTER_TYPES_TO_CONTACT_TYPES } from '../common/constants';
 
@@ -77,11 +78,13 @@ export class Sdk {
             hasContactSearch: true,
             hasAgentAvailability: true,
             hasQueueWaitTime: false,
-            supportsMos : true,
+            supportsMos : false,
             hasSupervisorListenIn: false,
             hasSupervisorBargeIn: false,
             hasBlindTransfer : false,
-            hasTransferToOmniFlow : true
+            hasTransferToOmniFlow : true,
+            hasPendingStatusChange: true,
+            hasPhoneBook : false
         },
         agentId: null,
         userFullName: null,
@@ -214,6 +217,8 @@ export class Sdk {
     this.state.capabilities.hasBlindTransfer = capabilities.hasBlindTransfer;
     this.state.capabilities.hasTransferToOmniFlow = capabilities.hasTransferToOmniFlow;
     this.state.capabilities.debugEnabled = capabilities.debugEnabled;
+    this.state.capabilities.hasPendingStatusChange = capabilities.hasPendingStatusChange;
+    this.state.capabilities.hasPhoneBook = capabilities.hasPhoneBook;
     localStorage.setItem('capabilities', JSON.stringify(this.state.capabilities));
  }
 
@@ -231,6 +236,14 @@ export class Sdk {
    throwError(enable) {
         localStorage.setItem('throwError', enable);
         this.state.throwError = enable;
+    }
+
+    /*
+    * This method is for demo purposes. Enables throwing custom errors for testing
+    */
+    customErrorChanged(value) {
+        localStorage.setItem('customError', value);
+        this.state.customError = value;
     }
 
     /*
@@ -282,6 +295,7 @@ export class Sdk {
     destroyCalls(call, reason) {
         let callsToDestroy = [];
         if (call.callAttributes && call.callAttributes.participantType === Constants.PARTICIPANT_TYPE.AGENT) {
+            //TODO: Revisit this logic.
             try {
                 const customerCall = this.getCall({ callAttributes: { participantType: Constants.PARTICIPANT_TYPE.INITIAL_CALLER }});
                 callsToDestroy.push(customerCall);
@@ -294,6 +308,9 @@ export class Sdk {
             } catch(e) {
                 //noop
             }
+            if (callsToDestroy.length === 0) {
+                callsToDestroy.push(this.getCall(call));
+            }
         } else {
             callsToDestroy.push(this.getCall(call));
         }
@@ -301,12 +318,20 @@ export class Sdk {
             const state = Constants.CALL_STATE.ENDED;
             callToDestroy.state = callToDestroy.callAttributes.state = state;
             callToDestroy.reason = reason;
+            if (this.shouldMessageOtherUser(callToDestroy)) {
+                this.messageUser(null, USER_MESSAGE.CALL_DESTROYED, {callId: callToDestroy.callId, reason: reason});
+            }
             this.state.destroyedCalls.push(callToDestroy);
             delete this.state.activeCalls[callToDestroy.callId];
         })
         localStorage.setItem("activeCalls", JSON.stringify(this.state.activeCalls));
         return callsToDestroy;
     }
+
+    shouldMessageOtherUser(callToDestroy) {
+        return callToDestroy.callType === Constants.CALL_TYPE.INTERNAL_CALL.toLocaleLowerCase();
+    }
+
     /**
      * destroy specified call
      * @param {string} reason - reason
@@ -371,22 +396,28 @@ export class Sdk {
             case USER_MESSAGE.CALL_STARTED:
                 this.startTransferCall(message);
                 break;
+            case USER_MESSAGE.INTERNAL_CALL_STARTED:
+                this.startInternalCall(message);
+                break;
             case USER_MESSAGE.PARTICIPANT_CONNECTED:
-                this.connectParticipant(message.data.callInfo);
+                this.connectParticipant(message.data.callInfo, message.data.callType);
                 break;
             case USER_MESSAGE.CALL_BARGED_IN:
                 this.publishCallBargedInEventToAgents(message.data);
                 break;
+            case USER_MESSAGE.CALL_DESTROYED:
+                this.processCallDestroyed(message.data);
+                break;
             default:
                 this.log("Could not handle message "+message.messageType, message)
         }
-    }
+    } 
 
     startTransferCall(message){
         const call = new PhoneCall({
             callType: "inbound",
             phoneNumber: message.data.phoneNumber,
-            callId: message.data.callId,
+            callId: message.data.callId || Math.random().toString(36).substring(7),
             callInfo: new CallInfo({isOnHold:false}),
             callAttributes: new PhoneCallAttributes({participantType: Constants.PARTICIPANT_TYPE.INITIAL_CALLER, voiceCallId : message.data.voiceCallId })
         });
@@ -395,6 +426,39 @@ export class Sdk {
         publishEvent({ eventType: Constants.EVENT_TYPE.CALL_STARTED, payload: callResult});
     }
 
+    startInternalCall(message) {
+        const currContact = new Contact({
+            phoneNumber : message.data.contact.phoneNumber,
+            id : message.data.contact.id,
+            type : message.data.contact.type,
+            name : message.data.contact.name
+        });
+        const call = new PhoneCall({
+            callType: "internalcall",
+            phoneNumber: message.data.contact.phoneNumber,
+            callId: message.data.callId,
+            contact: currContact,
+            callInfo: new CallInfo({isOnHold:false}),
+            callAttributes: new PhoneCallAttributes({participantType: Constants.PARTICIPANT_TYPE.AGENT })
+        });
+        this.addCall(call);
+        let callResult = new CallResult({call});
+        publishEvent({ eventType: Constants.EVENT_TYPE.CALL_STARTED, payload: callResult});
+    }
+
+    processCallDestroyed(messageData) {
+        if (messageData.callId) {
+            let callToDestroy = null;
+            try {
+                callToDestroy = this.getCall({ callId : messageData.callId});
+            } catch(e) {
+                //noop
+            }
+            if (callToDestroy) {
+                this.hangup(messageData.reason);
+            }
+        }
+    }
     /**
      * simulate logout from the telephony sub system
      */
@@ -424,7 +488,12 @@ export class Sdk {
     executeAsync(action, payload) {
         this.log(`Executing action - ${action}`, payload);
         if (this.state.throwError) {
-            return Promise.reject('demo error');
+            if (this.state.customError) {
+                const obj = this.state.customError.split('.');
+                return Promise.reject(new CustomError({ namespace: obj[0], labelName: obj[1]  }));
+            } else {
+                return Promise.reject('demo error');
+            }
         }
         switch (action) {
             case "mute":
@@ -483,7 +552,8 @@ export class Sdk {
         callInfo = callInfo || { isOnHold: false };
         callInfo.callStateTimestamp = new Date();
         const callAttributes = { participantType: Constants.PARTICIPANT_TYPE.INITIAL_CALLER };
-        const call = new Call(Constants.CALL_TYPE.OUTBOUND.toLowerCase(), contact, callAttributes, new CallInfo(callInfo));
+        const callType = (contact.type === Constants.CONTACT_TYPE.AGENT) ? Constants.CALL_TYPE.INTERNAL_CALL.toLowerCase() : Constants.CALL_TYPE.OUTBOUND.toLowerCase();
+        const call = new Call(callType, contact, callAttributes, new CallInfo(callInfo));
         this.addCall(call);
         const callResult = new CallResult({
             call
@@ -492,6 +562,9 @@ export class Sdk {
             publishEvent({ eventType: Constants.EVENT_TYPE.CALL_STARTED, payload: callResult });
         }
         this.state.agentAvailable = false;
+        if (this.state.onlineUsers.includes(contact.id) && contact.type === Constants.CONTACT_TYPE.AGENT) {
+            this.messageUser(contact.id, USER_MESSAGE.INTERNAL_CALL_STARTED, {phoneNumber: contact.phoneNumber, callId: call.callId, contact : contact });
+        }
         return this.executeAsync('dial', callResult);
     }
     /**
@@ -588,7 +661,7 @@ export class Sdk {
     }
 
     /**
-     * get agent configs, for example phones supported for agent and selected phone
+     * get agent  configs, for example if mute or recording is supported, phones supported for agent
      */
     getAgentConfig() {
         return this.executeAsync("getAgentConfig", new AgentConfigResult({
@@ -597,29 +670,31 @@ export class Sdk {
         }));
     }
 
-    /**
-     * get agent capabilities, for example if mute or recording is supported
+        /**
+     * get agent  configs, for example if mute or recording is supported, phones supported for agent
      */
     getCapabilities() {
-        return this.executeAsync("getCapabilities", new CapabilitiesResult({
-            hasMute: this.state.capabilities.hasMute,
-            hasMerge: this.state.capabilities.hasMerge,
-            hasRecord: this.state.capabilities.hasRecord,
-            hasSwap:  this.state.capabilities.hasSwap,
-            hasSignedRecordingUrl: this.state.capabilities.hasSignedRecordingUrl,
-            hasContactSearch: this.state.capabilities.hasContactSearch,
-            supportsMos: this.state.capabilities.supportsMos,
-            hasAgentAvailability: this.state.capabilities.hasAgentAvailability,
-            hasQueueWaitTime: this.state.capabilities.hasQueueWaitTime,
-            hasSupervisorListenIn: this.state.capabilities.hasSupervisorListenIn,
-            hasSupervisorBargeIn: this.state.capabilities.hasSupervisorBargeIn,
-            debugEnabled: this.state.capabilities.debugEnabled,
-            hasBlindTransfer: this.state.capabilities.hasBlindTransfer,
-            hasTransferToOmniFlow: this.state.capabilities.hasTransferToOmniFlow,
-            signedRecordingUrl: '',
-            signedRecordingDuration: null
-        }));
-    }
+            return this.executeAsync("getCapabilities", new CapabilitiesResult({
+                hasMute: this.state.capabilities.hasMute,
+                hasMerge: this.state.capabilities.hasMerge,
+                hasRecord: this.state.capabilities.hasRecord,
+                hasSwap:  this.state.capabilities.hasSwap,
+                hasSignedRecordingUrl: this.state.capabilities.hasSignedRecordingUrl,
+                hasContactSearch: this.state.capabilities.hasContactSearch,
+                supportsMos: this.state.capabilities.supportsMos,
+                hasAgentAvailability: this.state.capabilities.hasAgentAvailability,
+                hasQueueWaitTime: this.state.capabilities.hasQueueWaitTime,
+                hasSupervisorListenIn: this.state.capabilities.hasSupervisorListenIn,
+                hasSupervisorBargeIn: this.state.capabilities.hasSupervisorBargeIn,
+                debugEnabled: this.state.capabilities.debugEnabled,
+                hasBlindTransfer: this.state.capabilities.hasBlindTransfer,
+                hasTransferToOmniFlow: this.state.capabilities.hasTransferToOmniFlow,
+                hasPhoneBook : this.state.capabilities.hasPhoneBook,
+                hasPendingStatusChange: this.state.capabilities.hasPendingStatusChange,
+                signedRecordingUrl: '',
+                signedRecordingDuration: null
+            }));
+        }
 
      /**
      * get all active calls
@@ -638,15 +713,16 @@ export class Sdk {
         let callResult = null;
         if (!this.state.throwError) {
             let callToAccept = this.getCall(call);
-            const state = callToAccept.callType.toLowerCase() === Constants.CALL_TYPE.CALLBACK.toLowerCase() &&
-                callToAccept.state !== Constants.CALL_STATE.CONNECTED ?
+            const currType = callToAccept.callType.toLowerCase();
+            const state = ((currType === Constants.CALL_TYPE.CALLBACK.toLowerCase() || currType === Constants.CALL_TYPE.INTERNAL_CALL.toLowerCase()) &&
+                callToAccept.state !== Constants.CALL_STATE.CONNECTED) ?
                 Constants.CALL_STATE.RINGING : Constants.CALL_STATE.CONNECTED;
             callToAccept.state = state;
             callToAccept.callAttributes.state = state;
             this.log("acceptCall", callToAccept);
             this.addCall(callToAccept);
             this.state.agentAvailable = false;
-            this.messageUser(null, USER_MESSAGE.PARTICIPANT_CONNECTED, { callInfo: callToAccept.callInfo });
+            this.messageUser(null, USER_MESSAGE.PARTICIPANT_CONNECTED, { callInfo: callToAccept.callInfo, callType: currType });
             callResult = new CallResult({ call: callToAccept });
         }
         return this.executeAsync("acceptCall", callResult);
@@ -658,7 +734,7 @@ export class Sdk {
      */
     declineCall(call) {
         this.log("declineCall", call);
-        const destroyedCall = this.destroyCall(call, 'declined');
+        const destroyedCall = this.destroyCall(call, 'error');
         this.state.agentAvailable = true;
         return this.executeAsync("declineCall", new CallResult({ call: destroyedCall }));
     }
@@ -854,17 +930,18 @@ export class Sdk {
     }
     /**
      * Get Agent Phone Book Contacts
-     * @param {object} filter object to filter contacts by
      */
     getPhoneContacts(filter) {
         let onlineContacts = [];
+        let i=
         this.state.onlineUsers.forEach((user) => {
             if (this.state.agentId !== user) {
                 onlineContacts = onlineContacts.concat(new Contact ({
                     id: user,
                     type: Constants.CONTACT_TYPE.AGENT,
                     name : user,
-                    availability: "AVAILABLE"
+                    availability: "AVAILABLE",
+                    phoneNumber: "5445554440"
                 }))
             }
         })
@@ -970,17 +1047,27 @@ export class Sdk {
     /**
      * connect the last added participant
      */
-    connectParticipant(callInfo) {
-        const call = this.getCall({callAttributes: { participantType: Constants.PARTICIPANT_TYPE.THIRD_PARTY }});
-        call.state = Constants.CALL_STATE.TRANSFERRED;
+    connectParticipant(callInfo, callType) {
+        let call;
+        if (callType !==  Constants.CALL_TYPE.INTERNAL_CALL.toLowerCase()) {
+            call = this.getCall({callAttributes: { participantType: Constants.PARTICIPANT_TYPE.THIRD_PARTY }});
+            call.state = Constants.CALL_STATE.TRANSFERRED;
+        } else {
+            call = this.getCall({callAttributes: { participantType: Constants.PARTICIPANT_TYPE.INITIAL_CALLER }});
+            call.state = Constants.CALL_STATE.CONNECTED;
+        }      
         this.log("connectParticipant", call);
         this.addCall(call);
-        publishEvent({eventType: Constants.EVENT_TYPE.PARTICIPANT_CONNECTED, payload: new ParticipantResult({
-            phoneNumber: call.contact.phoneNumber,
-            callInfo: new CallInfo({ isOnHold: false , isExternalTransfer: callInfo.isExternalTransfer, removeParticipantVariant: callInfo.removeParticipantVariant }),
-            initialCallHasEnded: call.callAttributes && call.callAttributes.initialCallHasEnded,
-            callId: call.callId
-        })});
+        if (callType !==  Constants.CALL_TYPE.INTERNAL_CALL.toLowerCase()) {
+            publishEvent({eventType: Constants.EVENT_TYPE.PARTICIPANT_CONNECTED, payload: new ParticipantResult({
+                phoneNumber: call.contact.phoneNumber,
+                callInfo: new CallInfo({ isOnHold: false , isExternalTransfer: callInfo.isExternalTransfer, removeParticipantVariant: callInfo.removeParticipantVariant }),
+                initialCallHasEnded: call.callAttributes && call.callAttributes.initialCallHasEnded,
+                callId: call.callId
+            })});
+        } else {
+            publishEvent({eventType: Constants.EVENT_TYPE.CALL_CONNECTED, payload: new CallResult({call})});
+        }
     }
     /**
      * connect the last added supervisor
@@ -1038,6 +1125,7 @@ export class Sdk {
         destroyedCalls.map((call) => { 
             call.callInfo.isSoftphoneCall = false;
             call.agentStatus = agentErrorStatus;
+            call.reason = reason;
             return call;
         });
         this.state.agentAvailable = Object.keys(this.state.activeCalls).length === 0;

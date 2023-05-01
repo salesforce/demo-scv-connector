@@ -10,6 +10,7 @@ import Constants from '../common/constants';
 const requestBroadcastChannel = new BroadcastChannel('rc-request');
 const showLoginPageCheckbox = document.getElementById('showLoginPageCheckbox');
 const throwErrorCheckbox = document.getElementById('throwErrorCheckbox');
+const customErrorTextArea = document.getElementById('custom-error-text');
 const hasMuteCheckbox = document.getElementById('hasMuteCheckbox');
 const hasRecordCheckbox = document.getElementById('hasRecordCheckbox');
 const hasSwapCheckbox = document.getElementById('hasSwapCheckbox');
@@ -23,9 +24,11 @@ const supportsMosCheckbox = document.getElementById('supportsMosCheckbox');
 const hasAgentAvailabilityCheckbox = document.getElementById('hasAgentAvailabilityCheckbox');
 const hasQueueWaitTimeCheckbox = document.getElementById('hasQueueWaitTimeCheckbox');
 const hasBlindTransferCheckbox = document.getElementById('hasBlindTransferCheckbox');
+const hasPhoneBookCheckbox = document.getElementById('hasPhoneBookCheckbox');
 const hasTransferToOmniFlowCheckbox = document.getElementById('hasTransferToOmniFlowCheckbox');
 const hasSupervisorListenInCheckbox = document.getElementById('hasSupervisorListenInCheckbox');
 const hasSupervisorBargeInCheckbox = document.getElementById('hasSupervisorBargeInCheckbox');
+const supportsQueuedAgentStatusCheckbox = document.getElementById('supportsQueuedAgentStatusCheckbox');
 const hasDebugLoggingCheckbox = document.getElementById('hasDebugLoggingCheckbox');
 const callIsRecordingPaused = document.getElementById('callIsRecordingPaused');
 const callIsOnHold = document.getElementById('callIsOnHold');
@@ -217,9 +220,11 @@ requestBroadcastChannel.addEventListener('message', (event) => {
                 hasSupervisorListenInCheckbox.checked = event.data.value.hasSupervisorListenIn;
                 hasSupervisorBargeInCheckbox.checked = event.data.value.hasSupervisorBargeIn;
                 hasBlindTransferCheckbox.checked = event.data.value.hasBlindTransfer;
+                hasPhoneBookCheckbox.checked = event.data.value.hasPhoneBook;
                 hasDebugLoggingCheckbox.checked = event.data.value.debugEnabled;
                 hasSignedRecordingUrlCheckbox.checked = event.data.value.hasSignedRecordingUrl;
                 hasTransferToOmniFlowCheckbox.checked = event.data.value.hasTransferToOmniFlow;
+                supportsQueuedAgentStatusCheckbox.checked = event.data.value.hasPendingStatusChange;
                 signedRecordingUrl.value = event.data.value.signedRecordingUrl ? event.data.value.signedRecordingUrl : '';
                 signedRecordingDuration.value = event.data.value.signedRecordingDuration ? event.data.value.signedRecordingDuration : '';
                 toggleSignedRecordingUrlElements();
@@ -318,6 +323,7 @@ window.addEventListener('mouseup', function(){
 });
 showLoginPageCheckbox.addEventListener('change', showLoginChanged);
 throwErrorCheckbox.addEventListener('change', throwErrorChanged);
+customErrorTextArea.addEventListener('input', onCustomErrorChanged);
 hasMuteCheckbox.addEventListener('change', setCapabilities);
 hasRecordCheckbox.addEventListener('change', setCapabilities);
 hasMergeCheckbox.addEventListener('change', setCapabilities);
@@ -330,10 +336,12 @@ hasSupervisorListenInCheckbox.addEventListener('change', setCapabilities);
 hasSupervisorBargeInCheckbox.addEventListener('change', setCapabilities);
 hasDebugLoggingCheckbox.addEventListener('change', setCapabilities);
 hasBlindTransferCheckbox.addEventListener('change', setCapabilities);
+hasPhoneBookCheckbox.addEventListener('change', setCapabilities);
 hasSwapCheckbox.addEventListener('change', setCapabilities);
 hasSignedRecordingUrlCheckbox.addEventListener('change', setCapabilities);
 signedRecordingUrl.addEventListener('change', setCapabilities);
 signedRecordingDuration.addEventListener('change', setCapabilities);
+supportsQueuedAgentStatusCheckbox.addEventListener('change', setCapabilities);
 hardphoneRadio.addEventListener('change', setAgentConfig);
 softphoneRadio.addEventListener('change', setAgentConfig);
 startOutboundCallButton.addEventListener('click', startOutboundCall);
@@ -398,6 +406,13 @@ function throwErrorChanged() {
     });
 }
 
+function onCustomErrorChanged() {
+    requestBroadcastChannel.postMessage({
+        type: Constants.CUSTOM_ERROR,
+        value: customErrorTextArea.value
+    });
+}
+
 function setAgentConfig() {
     toggleHardphoneElements();
     startOutboundCallButton.disabled = !hardphoneRadio.checked;
@@ -424,11 +439,14 @@ function setCapabilities() {
             hasSignedRecordingUrl: hasSignedRecordingUrlCheckbox.checked,
             hasSupervisorListenIn: hasSupervisorListenInCheckbox.checked,
             hasBlindTransfer: hasBlindTransferCheckbox.checked,
+            hasPhoneBook : hasPhoneBookCheckbox.checked,
             hasSupervisorBargeIn: hasSupervisorBargeInCheckbox.checked,
             debugEnabled: hasDebugLoggingCheckbox.checked,
             signedRecordingUrl: signedRecordingUrl.value,
             signedRecordingDuration: signedRecordingDuration.value,
-            hasTransferToOmniFlow: hasTransferToOmniFlowCheckbox.checked}
+            hasTransferToOmniFlow: hasTransferToOmniFlowCheckbox.checked,
+            hasPendingStatusChange: supportsQueuedAgentStatusCheckbox.checked
+        }
     });
 }
 

@@ -26,9 +26,11 @@ const tenantInfo = {
 const getScrtUrl = (info) => {
     const telephonyApiPostfix = 'telephony/v1';
     return info.scrtBaseUrl + "/" + telephonyApiPostfix;
+    //return "http://127.0.0.1:6324" + "/" + telephonyApiPostfix;
 };
 
 const getAxiosClient = (info) => {
+    let scrtUrl = getScrtUrl(info);
     return axios.create({ baseURL: getScrtUrl(info) });
 }
 
@@ -56,6 +58,7 @@ export const ScrtConnector = {
         Object.keys(tenantInfo).forEach( key => {
             updateResult = updateResult + `${key} : ${tenantInfo[key]}\n`;
         });
+        console.log(getToken());
         return updateResult;
     },
 

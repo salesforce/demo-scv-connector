@@ -13,7 +13,7 @@ jest.mock('@salesforce/scv-connector-base', () => ({
 
 import constants from './testConstants';
 import { publishEvent, log, GenericResult, PhoneCall, Contact, ParticipantResult, CallInfo, CallResult,
-    LogoutResult, Constants, Phone, AgentStatusInfo, HangupResult, SupervisedCallInfo, PhoneCallAttributes } from '@salesforce/scv-connector-base';
+    LogoutResult, Constants, Phone, AgentStatusInfo, HangupResult, SupervisedCallInfo, PhoneCallAttributes, CustomError } from '@salesforce/scv-connector-base';
 import { Connector } from '../main/connector';
 
 global.console.log = jest.fn(); //do not print console.log 
@@ -85,6 +85,29 @@ describe('Vendor Sdk tests', () => {
              expect(publishEvent).toBeCalledWith({ eventType: Constants.EVENT_TYPE.CALL_STARTED, payload: callResult});
         });
 
+        it('Should handle INTERNAL_CALL_STARTED message', () => {
+            const message = { 
+                messageType: constants.USER_MESSAGE.INTERNAL_CALL_STARTED,
+                data: { 
+                    contact: {
+                        phoneNumber: "phoneNumber",
+                        type: Constants.CONTACT_TYPE.AGENT
+                    }
+                 }
+             };
+             vendorSdk.handleSocketMessage(message);
+             const call = new PhoneCall({
+                   callType: "internalcall",
+                   phoneNumber: "phoneNumber",
+                   callInfo: new CallInfo({isOnHold:false}),
+                   contact: new Contact({phoneNumber : "phoneNumber", type: Constants.CONTACT_TYPE.AGENT}),
+                   callAttributes: new PhoneCallAttributes({participantType: Constants.PARTICIPANT_TYPE.AGENT })
+             });
+             let callResult = new CallResult({call});
+             expect(Object.keys(vendorSdk.state.activeCalls).length).toEqual(1);
+             expect(publishEvent).toBeCalledWith({ eventType: Constants.EVENT_TYPE.CALL_STARTED, payload: callResult});
+        });
+
         it('Should handle PARTICIPANT_CONNECTED message', () => {
             const message = { 
                 messageType: constants.USER_MESSAGE.PARTICIPANT_CONNECTED,
@@ -107,6 +130,16 @@ describe('Vendor Sdk tests', () => {
              };
             vendorSdk.handleSocketMessage(message);
             expect(vendorSdk.publishCallBargedInEventToAgents).toBeCalled();
+        });
+
+        it('Should handle CALL_DESTROYED message', () => {
+            const message = { 
+                messageType: constants.USER_MESSAGE.CALL_DESTROYED,
+                data: {
+                    callId : "dummyCallInfo"
+                }
+             };
+            vendorSdk.handleSocketMessage(message);
         });
 
         it('log message that cannot be handled', () => {
@@ -252,6 +285,28 @@ describe('Vendor Sdk tests', () => {
             expect(result.calls.pop()).toBe(call);
         });
 
+        it('Should return a valid call result for end call on an internal call', async () => {
+            const contact = new Contact({ id: 'dummyUser', phoneNumber: '100', type: Constants.CONTACT_TYPE.AGENT});
+            const startCallResult = await connector.dial(contact);
+            const { call } = startCallResult;
+            expect(startCallResult.call.callType).toBe(Constants.CALL_TYPE.INTERNAL_CALL.toLowerCase());
+            const result = await connector.endCall(call);
+            expect(result.calls.pop()).toBe(call);
+        });
+
+        it('Should not return a valid call for internal call that is destroyed by processcall', async () => {
+            const contact = new Contact({ id: 'dummyUser', phoneNumber: '100', type: Constants.CONTACT_TYPE.AGENT});
+            const startCallResult = await connector.dial(contact);
+            const { call } = startCallResult;
+            expect(startCallResult.call.callType).toBe(Constants.CALL_TYPE.INTERNAL_CALL.toLowerCase());
+            vendorSdk.processCallDestroyed({callId :call.callId});
+            try {
+                connector.endCall(call);  
+            } catch(e) {
+                expect(e.message).toEqual("Couldn't find an active call");
+            }
+        });
+
         it('Should return a valid call result on endCall for Agent for Initial Caller & Third party', async () => {
             await vendorSdk.startInboundCall(dummyPhoneNumber, dummyCallAttributes);
             await vendorSdk.startInboundCall(dummyPhoneNumber, { participantType: constants.PARTICIPANT_TYPE.THIRD_PARTY });
@@ -298,6 +353,7 @@ describe('Vendor Sdk tests', () => {
             const { call } = startCallResult;
             await expect(connector.endCall(call)).rejects.toStrictEqual('demo error');
         });
+        
         afterAll(() => {
             vendorSdk.throwError(false);
         });
@@ -305,6 +361,11 @@ describe('Vendor Sdk tests', () => {
 
     
     describe('dial', () => {
+        beforeEach(() => {
+            vendorSdk.state.onlineUsers = ['dummyUser'];
+            vendorSdk.messageUser = jest.fn();
+        });
+
         it('Should return a valid call result on dial', async () => {
             const contact = new Contact({ phoneNumber: '100'});
 
@@ -352,7 +413,14 @@ describe('Vendor Sdk tests', () => {
             expect(result.call.callInfo.isSoftphoneCall).toBe(false);
             expect(publishEvent).toBeCalledWith({ eventType: Constants.EVENT_TYPE.CALL_STARTED, payload: result });
         });
-
+        it('Should return a valid internal call result on dial with contact type Agent', async () => {
+            const contact = new Contact({ id: 'dummyUser', phoneNumber: '100', type: Constants.CONTACT_TYPE.AGENT});
+            const result = await connector.dial(contact);
+            expect(result.call.callType).toBe(Constants.CALL_TYPE.INTERNAL_CALL.toLowerCase());
+            expect(result.call.contact).toBe(contact);
+            expect(result.call.callInfo.callStateTimestamp instanceof Date).toBeTruthy();
+            expect(result.call.callAttributes.participantType).toBe(Constants.PARTICIPANT_TYPE.INITIAL_CALLER);
+        });
     });
 
     describe('logout', () => {
@@ -648,6 +716,15 @@ describe('Vendor Sdk tests', () => {
                 callId: expect.anything()
             })});
         });
+
+        it('Should publish a participant result on connectParticipant-internal call scenario', async () => {
+            const contact = new Contact({ phoneNumber: '100', type: Constants.CONTACT_TYPE.AGENT});
+
+            await connector.dial(contact);
+            connector.sdk.connectParticipant({removeParticipantVariant : Constants.REMOVE_PARTICIPANT_VARIANT.ALWAYS }, "internalcall");
+            expect(publishEvent).toBeCalledWith({ eventType: Constants.EVENT_TYPE.CALL_CONNECTED, payload: expect.anything()
+            });
+        });
     });
 
     describe('removeParticipant', () => {
@@ -871,6 +948,7 @@ describe('Vendor Sdk tests', () => {
             id: 'onlineUser1',
             type: Constants.CONTACT_TYPE.AGENT,
             name : 'onlineUser1',
+            phoneNumber: "5445554440",
             availability: "AVAILABLE"
         });
 
@@ -1007,6 +1085,25 @@ describe('Vendor Sdk tests', () => {
         it('Should throw error', async () => {
             vendorSdk.throwError(true);
             expect(connector.sdk.executeAsync('someMethod')).rejects.toStrictEqual('demo error');
+        });
+    });
+
+    describe('throwCustomError', () => {
+        afterAll(() => {
+            vendorSdk.throwError(false);
+            vendorSdk.customErrorChanged('');
+        });
+
+        it('Should throw custom error', async () => {
+            vendorSdk.customErrorChanged('c.customErrorLabel');
+            expect(vendorSdk.state.customError).toBe('c.customErrorLabel');
+        });
+
+        it('Should throw custom error object', async () => {
+            vendorSdk.throwError(true);
+            vendorSdk.customErrorChanged('c.customErrorLabel');
+            const customError = new CustomError({ namespace: 'c', labelName: 'customErrorLabel'})
+            expect(connector.sdk.executeAsync('someMethod')).rejects.toStrictEqual(customError);
         });
     });
     

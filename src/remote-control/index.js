@@ -56,6 +56,10 @@ export function initializeRemoteController(connector) {
                         connector.sdk.throwError(event.data.value)
                     }
                     break;
+                    case Constants.CUSTOM_ERROR: {
+                        connector.sdk.customErrorChanged(event.data.value)
+                    }
+                    break;
                     case Constants.SET_SHOW_LOGIN_PAGE: {
                         connector.sdk.showLoginPage(event.data.value);
                     }
@@ -80,10 +84,12 @@ export function initializeRemoteController(connector) {
                             hasSupervisorListenIn: event.data.value.hasSupervisorListenIn,
                             hasSupervisorBargeIn: event.data.value.hasSupervisorBargeIn,
                             hasBlindTransfer: event.data.value.hasBlindTransfer,
+                            hasPhoneBook: event.data.value.hasPhoneBook,
                             debugEnabled: event.data.value.debugEnabled,
                             hasAgentAvailability: event.data.value.hasAgentAvailability,
                             hasQueueWaitTime: event.data.value.hasQueueWaitTime,
-                            hasTransferToOmniFlow: event.data.value.hasTransferToOmniFlow
+                            hasTransferToOmniFlow: event.data.value.hasTransferToOmniFlow,
+                            hasPendingStatusChange: event.data.value.hasPendingStatusChange
                          });
                     }
                     break;

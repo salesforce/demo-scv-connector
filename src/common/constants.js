@@ -7,7 +7,7 @@
 
 import { Constants } from '@salesforce/scv-connector-base';
 export default {
-    LOGIN_SUBMIT: 'LOGIN_SUBMIT',
+    LOGIN_SUBMIT: 'LOGIN_SUBMIT_JAKE_TEST',
     SHOW_LOGIN_PAGE: 'SHOW_LOGIN_PAGE',
     GET_SHOW_LOGIN_PAGE: 'GET_SHOW_LOGIN_PAGE',
     SET_SHOW_LOGIN_PAGE: 'SET_SHOW_LOGIN_PAGE',
@@ -75,8 +75,8 @@ export default {
     PARTICIPANT_REMOVED: 'PARTICIPANT_REMOVED',
     MESSAGE: 'MESSAGE',
     REMOTE_CONTROLLER: 'REMOTE_CONTROLLER',
-    EVENT_TYPE: { 
-        ...Constants.EVENT_TYPE 
+    EVENT_TYPE: {
+        ...Constants.EVENT_TYPE
     },
     AGENT_ERROR_STATUS: {
         DECLINED_BY_AGENT: "DeclinedByAgent",

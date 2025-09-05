@@ -12,6 +12,7 @@ module.exports = {
         https: true,
         contentBase: __dirname + '/public',
         host: '0.0.0.0',
+        port: 3000,
         proxy: {
             '/api': process.env.SERVER_URL,
             '/socket.io': {
